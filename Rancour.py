@@ -147,6 +147,30 @@ class Rancour(commands.Cog):
             embed.add_field(name="New Channel", value=after.channel.mention, inline=True)
             await send_log(member.guild, embed)
 
+
+
+    @app_commands.command(name="scrape_id", description="Scrape all non-bot Discord user IDs to a text file.")
+    async def scrape_id(self, interaction: discord.Interaction):
+        member = interaction.user
+        if not isinstance(member, discord.Member) or not any(role.name == "Moderators" for role in member.roles):
+            await interaction.response.send_message("❌ You do not have permission.", ephemeral=True)
+            return
+
+        await interaction.response.defer(thinking=True)
+
+        ids = [str(m.id) for m in interaction.guild.members if not m.bot]
+        filename = f"member_ids_{interaction.guild.id}.txt"
+        with open(filename, "w") as f:
+            f.write("\n".join(ids))
+
+        try:
+            await interaction.followup.send(
+                content=f"✅ Scraped {len(ids)} member IDs.",
+                file=discord.File(filename),
+            )
+        finally:
+            if os.path.exists(filename):
+                os.remove(filename)
     @commands.command(name="export_ids")
     async def export_ids(self, ctx: commands.Context):
         if not any(role.name == "Moderators" for role in ctx.author.roles):
