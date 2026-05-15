@@ -151,18 +151,8 @@ class Rancour(commands.Cog):
 
     @app_commands.command(name="scrape_id", description="Scrape all non-bot Discord user IDs to a text file.")
     async def scrape_id(self, interaction: discord.Interaction):
-        if interaction.guild is None:
-            await interaction.response.send_message("❌ This command can only be used in a server.", ephemeral=True)
-            return
-
         member = interaction.user
-        if not isinstance(member, discord.Member):
-            await interaction.response.send_message("❌ Could not resolve your server membership.", ephemeral=True)
-            return
-
-        has_moderator_role = any(role.name == "Moderators" for role in member.roles)
-        has_admin_permission = member.guild_permissions.administrator
-        if not has_moderator_role and not has_admin_permission:
+        if not isinstance(member, discord.Member) or not any(role.name == "Moderators" for role in member.roles):
             await interaction.response.send_message("❌ You do not have permission.", ephemeral=True)
             return
 
