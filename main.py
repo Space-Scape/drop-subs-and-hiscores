@@ -1421,13 +1421,14 @@ def format_million(amount: int) -> str:
         return f"{millions:,.2f}M".rstrip('0').rstrip('.')
 
 
-def log_coffer_entry(name: str, amount: int, entry_type: str, coffer_change: int = 0):
+def log_coffer_entry(name: str, amount: int, entry_type: str, coffer_change: int = 0, owed_total: int = 0):
     timestamp = datetime.now().strftime("%I:%M%p %m/%d/%Y").lstrip("0").replace(" 0", " ")
     coffer_sheet.append_row([
         name,
         amount,
         entry_type,
         f"{'+' if coffer_change >= 0 else ''}{coffer_change}",
+        owed_total,
         timestamp
     ])
 
@@ -1436,7 +1437,7 @@ def get_current_total_and_holders_and_owed():
     records = coffer_sheet.get_all_records()
     total = 0
     inferred_holders = {}
-    inferred_owed = {}
+    inferred_owed_total = {}
 
     for row in records:
         name = row.get("Name")
@@ -1456,10 +1457,11 @@ def get_current_total_and_holders_and_owed():
         if entry_type == "holding":
             inferred_holders[name] = amount
         elif entry_type == "owed":
-            inferred_owed[name] = amount
+            owed_total_value = row.get("Owed Total", amount)
+            inferred_owed_total[name] = int(owed_total_value or 0)
 
     holders = {k: v for k, v in inferred_holders.items() if v > 0}
-    owed = {k: v for k, v in inferred_owed.items() if v > 0}
+    owed = {k: v for k, v in inferred_owed_total.items() if v > 0}
 
     return total, holders, owed
 
@@ -1630,15 +1632,19 @@ async def owed(
         )
         return
 
+    _, _, owed = get_current_total_and_holders_and_owed()
+    current_total = owed.get(name, 0)
+    new_total = current_total + amt
+
     if amt > 0:
-        log_coffer_entry(name, amt, "owed", 0)
-        formatted_amount = format_million(amt)
+        log_coffer_entry(name, amt, "owed", 0, new_total)
+        formatted_amount = format_million(new_total)
         await interaction.response.send_message(
-            f"{CUSTOM_EMOJI} {name} is now owed {formatted_amount}.",
+            f"{CUSTOM_EMOJI} {name} is now owed a total of {formatted_amount}.",
             ephemeral=False
         )
     else:
-        log_coffer_entry(name, 0, "owed", 0)
+        log_coffer_entry(name, 0, "owed", 0, 0)
         await interaction.response.send_message(
             f"{CUSTOM_EMOJI} {name} is no longer owed any money.",
             ephemeral=False
@@ -1649,7 +1655,7 @@ async def owed(
 async def clear_owed(interaction: discord.Interaction, user: discord.User):
     name = user.display_name
 
-    log_coffer_entry(name, 0, "owed", 0)
+    log_coffer_entry(name, 0, "owed", 0, 0)
 
     await interaction.response.send_message(
         f"{CUSTOM_EMOJI} Cleared owed amount for **{name}**.",
