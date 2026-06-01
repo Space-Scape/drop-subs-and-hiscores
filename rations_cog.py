@@ -26,6 +26,12 @@ def ration_emojis(total: int) -> str:
     return ("🍚" * bowls) + ("🍙" * rice_balls)
 
 
+def format_ration_line(name: object, total: int) -> str:
+    display = ration_emojis(total) or "No rations"
+    warning = " (risk of starvation)" if total in (1, 2) else ""
+    return f"{name}: {display}{warning}"
+
+
 class RationsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -61,7 +67,7 @@ class RationsCog(commands.Cog):
             self.save_rations()
 
         await interaction.response.send_message(
-            f"{username.display_name}: {ration_emojis(int(entry['total']))}",
+            format_ration_line(username.display_name, int(entry["total"])),
             ephemeral=True,
         )
 
@@ -87,26 +93,26 @@ class RationsCog(commands.Cog):
             entry["total"] = total - 1
             self.save_rations()
 
-        display = ration_emojis(int(entry["total"])) or "No rations"
         await interaction.response.send_message(
-            f"{username.display_name}: {display}",
+            format_ration_line(username.display_name, int(entry["total"])),
             ephemeral=True,
         )
 
-    @app_commands.command(name="showrations", description="Show everyone's rations.")
+    @app_commands.command(name="rations", description="Show everyone's rations.")
     async def show_rations(self, interaction: discord.Interaction) -> None:
         ranked_entries = sorted(
             self.rations.values(),
             key=lambda entry: (-int(entry["total"]), str(entry["name"]).lower()),
         )
         lines = [
-            f"{entry['name']}: {ration_emojis(int(entry['total']))}"
+            format_ration_line(entry["name"], int(entry["total"]))
             for entry in ranked_entries
             if int(entry["total"]) > 0
         ]
+        leaderboard = "\n".join(lines) if lines else "Nobody has any rations yet."
 
         await interaction.response.send_message(
-            "\n".join(lines) if lines else "Nobody has any rations yet."
+            f"{leaderboard}\n\nGlory to the Supreme Leader"
         )
 
     async def cog_app_command_error(
