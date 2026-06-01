@@ -2084,7 +2084,7 @@ async def on_ready():
 
 async def main():
     async with bot:
-        cogs_to_load = ["sanguine_cog", "Rancour"]
+        cogs_to_load = ["sanguine_cog", "Rancour", "rations_cog"]
         for cog_name in cogs_to_load:
             try:
                 await bot.load_extension(cog_name)
