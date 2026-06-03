@@ -42,7 +42,9 @@ try:
     CST = ZoneInfo("America/Chicago")
 except Exception:
     CST = timezone(timedelta(hours=-6))
-DEFAULT_STEALS = 1
+STEAL_AVAILABLE = 0
+STEAL_USED = 1
+DEFAULT_STEALS = STEAL_AVAILABLE
 LABOR_PAYOUT = 2
 CAUGHT_BASE_PERCENT = 15
 CAUGHT_PERCENT_PER_RATION = 5
@@ -274,7 +276,7 @@ def caught_chance_percent(total: int) -> int:
 def send_to_labor(entry: dict[str, object], now: datetime | None = None) -> datetime:
     release_at = next_labor_release(now)
     entry["labor_release"] = release_at.isoformat(timespec="minutes")
-    entry["steals"] = 0
+    entry["steals"] = STEAL_USED
     return release_at
 
 
@@ -322,7 +324,7 @@ def can_steal(entry: dict[str, object], now: datetime | None = None) -> bool:
     return (
         not is_dead(entry)
         and not is_in_labor(entry, now)
-        and parse_flag(entry.get("steals"), DEFAULT_STEALS) == 1
+        and parse_flag(entry.get("steals"), DEFAULT_STEALS) == STEAL_AVAILABLE
     )
 
 
@@ -342,7 +344,7 @@ def steal_status_message(entry: dict[str, object] | None, now: datetime | None =
     if release_at is not None and release_at > (now or current_cst_time()):
         return f"You are in the labor camp ⛏️ until {format_release_time(release_at)}."
 
-    if parse_flag(entry.get("steals"), DEFAULT_STEALS):
+    if parse_flag(entry.get("steals"), DEFAULT_STEALS) == STEAL_AVAILABLE:
         return "Your daily steal is available."
 
     return "You already used your steal today. It resets at 12:00 PM."
@@ -562,13 +564,13 @@ class RationsCog(commands.Cog):
             release_at = parse_labor_release(entry.get("labor_release"))
             was_in_labor = release_at is not None
             entry["total"] = max(0, int(entry["total"]) - 1)
-            entry["steals"] = DEFAULT_STEALS
+            entry["steals"] = STEAL_AVAILABLE
             reset_names.append(str(entry["name"]))
 
             if was_in_labor and int(entry["total"]) == 0:
                 entry["dead"] = 1
                 entry["labor_release"] = ""
-                entry["steals"] = 0
+                entry["steals"] = STEAL_USED
                 dead_names.append(str(entry["name"]))
 
         return reset_names, dead_names
@@ -773,7 +775,7 @@ class RationsCog(commands.Cog):
                     ephemeral=True,
                 )
                 return
-            if not parse_flag(thief_entry.get("steals"), DEFAULT_STEALS):
+            if parse_flag(thief_entry.get("steals"), DEFAULT_STEALS) == STEAL_USED:
                 await interaction.response.send_message(
                     steal_status_message(thief_entry, now),
                     ephemeral=True,
@@ -802,7 +804,7 @@ class RationsCog(commands.Cog):
             previous_target = dict(target_entry)
             chance = caught_chance_percent(int(thief_entry["total"]))
             caught = random.randint(1, 100) <= chance
-            thief_entry["steals"] = 0
+            thief_entry["steals"] = STEAL_USED
 
             if caught:
                 release_at = send_to_labor(thief_entry, now)
