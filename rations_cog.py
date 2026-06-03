@@ -49,6 +49,9 @@ LABOR_PAYOUT = 2
 CAUGHT_BASE_PERCENT = 15
 CAUGHT_PERCENT_PER_RATION = 5
 CAUGHT_MAX_PERCENT = 80
+GIVE_MIN_RATIONS_TO_GIVE = 2
+GIVE_REWARD_MIN_PERCENT = 5
+GIVE_REWARD_MAX_PERCENT = 60
 
 
 def load_local_rations() -> dict[str, dict[str, object]]:
@@ -296,6 +299,14 @@ def caught_chance_percent(total: int) -> int:
     )
 
 
+def give_reward_chance_percent(total_after_gift: int) -> int:
+    effective_total = max(GIVE_MIN_RATIONS_TO_GIVE, total_after_gift)
+    return min(
+        GIVE_REWARD_MAX_PERCENT,
+        max(GIVE_REWARD_MIN_PERCENT, 100 // effective_total),
+    )
+
+
 def send_to_labor(entry: dict[str, object], now: datetime | None = None) -> datetime:
     release_at = next_labor_release(now)
     entry["labor_release"] = release_at.isoformat(timespec="minutes")
@@ -435,6 +446,59 @@ class StealTargetView(discord.ui.View):
         self.add_item(StealTargetSelect(cog, thief_id, options))
 
 
+class GiveTargetSelect(discord.ui.Select):
+    def __init__(
+        self,
+        cog: "RationsCog",
+        giver_id: int,
+        options: list[discord.SelectOption],
+    ):
+        super().__init__(
+            placeholder="Choose someone to give a ration to...",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+        self.cog = cog
+        self.giver_id = giver_id
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if interaction.user.id != self.giver_id:
+            await interaction.response.send_message(
+                "This give menu is not yours.",
+                ephemeral=True,
+            )
+            return
+
+        message = await self.cog.resolve_give_selection(
+            interaction,
+            self.values[0],
+        )
+        self.disabled = True
+        if self.view is not None:
+            for item in self.view.children:
+                item.disabled = True
+
+        await interaction.response.send_message(message)
+
+        if interaction.message is not None:
+            try:
+                await interaction.message.edit(view=self.view)
+            except discord.HTTPException:
+                pass
+
+
+class GiveTargetView(discord.ui.View):
+    def __init__(
+        self,
+        cog: "RationsCog",
+        giver_id: int,
+        options: list[discord.SelectOption],
+    ):
+        super().__init__(timeout=300)
+        self.add_item(GiveTargetSelect(cog, giver_id, options))
+
+
 class RationsView(discord.ui.View):
     def __init__(self, cog: "RationsCog"):
         super().__init__(timeout=300)
@@ -447,6 +511,19 @@ class RationsView(discord.ui.View):
         button: discord.ui.Button,
     ) -> None:
         message, view = await self.cog.build_steal_prompt(interaction)
+        await interaction.response.send_message(
+            message,
+            view=view,
+            ephemeral=True,
+        )
+
+    @discord.ui.button(label="Give", style=discord.ButtonStyle.success)
+    async def give_button(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        message, view = await self.cog.build_give_prompt(interaction)
         await interaction.response.send_message(
             message,
             view=view,
@@ -617,6 +694,24 @@ class RationsCog(commands.Cog):
             for user_id, entry in stealable_entries[:25]
         ]
         return options, len(stealable_entries)
+
+    def give_target_options(self, giver_id: str) -> tuple[list[discord.SelectOption], int]:
+        recipient_entries = [
+            (user_id, entry)
+            for user_id, entry in self.rations.items()
+            if user_id != giver_id and not is_dead(entry)
+        ]
+        recipient_entries.sort(key=lambda item: str(item[1]["name"]).lower())
+
+        options = [
+            discord.SelectOption(
+                label=str(entry["name"])[:100],
+                value=user_id,
+                description=f"{int(entry['total'])} ration(s)"[:100],
+            )
+            for user_id, entry in recipient_entries[:25]
+        ]
+        return options, len(recipient_entries)
 
     async def connect_storage(self) -> bool:
         if self.rations_sheet is not None:
@@ -999,6 +1094,102 @@ class RationsCog(commands.Cog):
                 raise
 
         return message
+
+    async def build_give_prompt(
+        self,
+        interaction: discord.Interaction,
+    ) -> tuple[str, discord.ui.View | None]:
+        if not await self.connect_storage():
+            return self.storage_error_message(), None
+
+        await self.settle_due_labor_releases()
+
+        if not isinstance(interaction.user, discord.Member):
+            return "You can only give rations inside the server.", None
+
+        giver = interaction.user
+        async with self.rations_lock:
+            giver_entry = self.get_entry(giver)
+            if is_dead(giver_entry):
+                return "You died in the labor camp and cannot give rations.", None
+            giver_total = int(giver_entry["total"])
+            if giver_total < GIVE_MIN_RATIONS_TO_GIVE:
+                return "You need at least 2 rations to give one.", None
+
+            options, total_recipients = self.give_target_options(str(giver.id))
+            if not options:
+                return "Nobody is available to receive a ration.", None
+
+            reward_chance = give_reward_chance_percent(giver_total)
+            recipient_note = (
+                "\n\nShowing the first 25 available recipients."
+                if total_recipients > len(options)
+                else ""
+            )
+
+        return (
+            f"You have {giver_total} ration(s). "
+            f"Giving 1 ration has a {reward_chance}% chance to reward you "
+            f"with 1 ration. Select someone to give 1 ration to.{recipient_note}",
+            GiveTargetView(self, giver.id, options),
+        )
+
+    async def resolve_give_selection(
+        self,
+        interaction: discord.Interaction,
+        recipient_user_id: str,
+    ) -> str:
+        if not await self.connect_storage():
+            return self.storage_error_message()
+
+        if not isinstance(interaction.user, discord.Member):
+            return "You can only give rations inside the server."
+
+        await self.settle_due_labor_releases()
+
+        giver = interaction.user
+        async with self.rations_lock:
+            giver_entry = self.get_entry(giver)
+            recipient_entry = self.rations.get(recipient_user_id)
+
+            if recipient_entry is None:
+                return "That recipient is no longer available."
+            normalize_entry(recipient_entry)
+            recipient = self.get_member_or_target(recipient_user_id, recipient_entry)
+
+            if recipient.id == giver.id:
+                return "You cannot give a ration to yourself."
+            if is_dead(giver_entry):
+                return "You died in the labor camp and cannot give rations."
+            if is_dead(recipient_entry):
+                return f"{recipient.display_name} is dead and cannot receive rations."
+            if int(giver_entry["total"]) < GIVE_MIN_RATIONS_TO_GIVE:
+                return "You need at least 2 rations to give one."
+
+            previous_giver = dict(giver_entry)
+            previous_recipient = dict(recipient_entry)
+            reward_chance = give_reward_chance_percent(int(giver_entry["total"]))
+            giver_entry["total"] = int(giver_entry["total"]) - 1
+            recipient_entry["total"] = int(recipient_entry["total"]) + 1
+            rewarded = random.randint(1, 100) <= reward_chance
+            if rewarded:
+                giver_entry["total"] = int(giver_entry["total"]) + 1
+
+            try:
+                await asyncio.to_thread(self.save_rations)
+            except Exception as error:
+                giver_entry.update(previous_giver)
+                recipient_entry.update(previous_recipient)
+                self.record_storage_error(error)
+                raise
+
+        return (
+            f"You gave 1 ration to {recipient.display_name}.\n"
+            f"{'You were rewarded with 1 ration.' if rewarded else 'No bonus ration this time.'} "
+            f"Reward chance: {reward_chance}%.\n"
+            f"{format_ration_line(giver.display_name, int(giver_entry['total']), giver_entry)}\n"
+            f"{format_ration_line(recipient.display_name, int(recipient_entry['total']), recipient_entry)}"
+        )
 
     @app_commands.command(name="laborcamp", description="Volunteer for the labor camp.")
     async def volunteer_labor_camp(self, interaction: discord.Interaction) -> None:
