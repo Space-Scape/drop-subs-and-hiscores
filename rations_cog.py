@@ -253,6 +253,29 @@ def next_labor_release(now: datetime | None = None) -> datetime:
     return (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
+def next_noon(now: datetime | None = None) -> datetime:
+    now = now or current_cst_time()
+    noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
+    if now < noon:
+        return noon
+    return noon + timedelta(days=1)
+
+
+def next_steal_gain_time(entry: dict[str, object], now: datetime | None = None) -> datetime | None:
+    now = now or current_cst_time()
+    if is_dead(entry):
+        return None
+
+    release_at = parse_labor_release(entry.get("labor_release"))
+    if release_at is not None and release_at > now:
+        release_at = release_at.astimezone(CST)
+        if release_at.hour == 12:
+            return release_at
+        return release_at.replace(hour=12, minute=0, second=0, microsecond=0)
+
+    return next_noon(now)
+
+
 def format_release_time(release_at: datetime) -> str:
     return release_at.strftime("%m/%d %I:%M %p")
 
@@ -292,12 +315,7 @@ def format_ration_line(
     if is_dead(entry):
         return f"{name}: ☠️ died in the labor camp"
 
-    release_at = parse_labor_release(entry.get("labor_release"))
-    labor = ""
-    if release_at is not None and release_at > (now or current_cst_time()):
-        labor = f" ⛏️ until {format_release_time(release_at)}"
-
-    return f"{name}: {display}{warning}{labor}"
+    return f"{name}: {display}{warning}"
 
 
 def format_labor_line(
@@ -307,7 +325,7 @@ def format_labor_line(
     now: datetime | None = None,
 ) -> str:
     if is_dead(entry):
-        return f"{name}: ☠️ died in the labor camp"
+        return f"☠️ {name} - died in the labor camp."
 
     release_at = parse_labor_release(entry.get("labor_release"))
     release_text = (
@@ -315,9 +333,7 @@ def format_labor_line(
         if release_at is not None
         else "release pending"
     )
-    display = ration_emojis(total) or "No rations"
-    warning = " (risk of starvation)" if total in (1, 2) else ""
-    return f"{name}: {display}{warning} ⛏️ {release_text}"
+    return f"⛏️ {name} - sentenced to hard labor {release_text}."
 
 
 def can_steal(entry: dict[str, object], now: datetime | None = None) -> bool:
@@ -333,6 +349,29 @@ def format_steal_chance_line(entry: dict[str, object]) -> str:
     return f"{entry['name']}: {chance}% chance of being sent to labor camp"
 
 
+def format_steal_chances(rations: dict[str, dict[str, object]], now: datetime) -> str:
+    lines = [
+        format_steal_chance_line(entry)
+        for entry in sorted(rations.values(), key=lambda entry: str(entry["name"]).lower())
+        if not is_dead(entry) and not is_in_labor(entry, now)
+    ]
+    return "\n".join(lines) if lines else "Nobody is eligible to steal."
+
+
+def can_be_stolen_from(
+    entry: dict[str, object],
+    user_id: str,
+    thief_id: str,
+    now: datetime,
+) -> bool:
+    return (
+        user_id != thief_id
+        and not is_dead(entry)
+        and not is_in_labor(entry, now)
+        and int(entry["total"]) > 0
+    )
+
+
 def steal_status_message(entry: dict[str, object] | None, now: datetime | None = None) -> str:
     if entry is None:
         return "Your daily steal is available."
@@ -342,12 +381,72 @@ def steal_status_message(entry: dict[str, object] | None, now: datetime | None =
 
     release_at = parse_labor_release(entry.get("labor_release"))
     if release_at is not None and release_at > (now or current_cst_time()):
-        return f"You are in the labor camp ⛏️ until {format_release_time(release_at)}."
+        return f"You are in the labor camp until {format_release_time(release_at)}."
 
     if parse_flag(entry.get("steals"), DEFAULT_STEALS) == STEAL_AVAILABLE:
         return "Your daily steal is available."
 
     return "You already used your steal today. It resets at 12:00 PM."
+
+
+class RationTarget:
+    def __init__(self, user_id: str, display_name: str):
+        self.id = int(user_id)
+        self.display_name = display_name
+        self.bot = False
+
+
+class StealTargetSelect(discord.ui.Select):
+    def __init__(
+        self,
+        cog: "RationsCog",
+        thief_id: int,
+        options: list[discord.SelectOption],
+    ):
+        super().__init__(
+            placeholder="Choose someone to steal from...",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+        self.cog = cog
+        self.thief_id = thief_id
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if interaction.user.id != self.thief_id:
+            await interaction.response.send_message(
+                "This steal menu is not yours.",
+                ephemeral=True,
+            )
+            return
+
+        message = await self.cog.resolve_steal_selection(
+            interaction,
+            self.values[0],
+        )
+        self.disabled = True
+        if self.view is not None:
+            for item in self.view.children:
+                item.disabled = True
+
+        await interaction.response.send_message(message)
+
+        if interaction.message is not None:
+            try:
+                await interaction.message.edit(view=self.view)
+            except discord.HTTPException:
+                pass
+
+
+class StealTargetView(discord.ui.View):
+    def __init__(
+        self,
+        cog: "RationsCog",
+        thief_id: int,
+        options: list[discord.SelectOption],
+    ):
+        super().__init__(timeout=300)
+        self.add_item(StealTargetSelect(cog, thief_id, options))
 
 
 class RationsCog(commands.Cog):
@@ -460,6 +559,59 @@ class RationsCog(commands.Cog):
         normalize_entry(entry)
         entry["name"] = member.display_name
         return entry
+
+    def get_member_or_target(self, user_id: str, entry: dict[str, object]) -> discord.Member | RationTarget:
+        member = self.find_member(user_id)
+        if member is not None:
+            return member
+        return RationTarget(user_id, str(entry["name"]))
+
+    def steal_unavailable_message(
+        self,
+        entry: dict[str, object],
+        now: datetime,
+    ) -> str:
+        if is_dead(entry):
+            return "You died in the labor camp and cannot steal."
+
+        release_at = parse_labor_release(entry.get("labor_release"))
+        next_steal = next_steal_gain_time(entry, now)
+        if release_at is not None and release_at > now:
+            if next_steal is None:
+                return f"You are in the labor camp until {format_release_time(release_at)}."
+            return (
+                f"You are in the labor camp until {format_release_time(release_at)}. "
+                f"Your next steal is gained at {format_release_time(next_steal)}."
+            )
+
+        if next_steal is not None:
+            return f"Your next steal is gained at {format_release_time(next_steal)}."
+
+        return "You cannot steal."
+
+    def steal_target_options(
+        self,
+        thief_id: str,
+        now: datetime,
+    ) -> tuple[list[discord.SelectOption], int]:
+        stealable_entries = [
+            (user_id, entry)
+            for user_id, entry in self.rations.items()
+            if can_be_stolen_from(entry, user_id, thief_id, now)
+        ]
+        stealable_entries.sort(
+            key=lambda item: (-int(item[1]["total"]), str(item[1]["name"]).lower())
+        )
+
+        options = [
+            discord.SelectOption(
+                label=str(entry["name"])[:100],
+                value=user_id,
+                description=f"{int(entry['total'])} ration(s) available"[:100],
+            )
+            for user_id, entry in stealable_entries[:25]
+        ]
+        return options, len(stealable_entries)
 
     async def connect_storage(self) -> bool:
         if self.rations_sheet is not None:
@@ -724,13 +876,8 @@ class RationsCog(commands.Cog):
             ephemeral=True,
         )
 
-    @app_commands.command(name="steal", description="Steal one ration from a person.")
-    @app_commands.describe(username="The person to steal from")
-    async def steal_ration(
-        self,
-        interaction: discord.Interaction,
-        username: discord.Member,
-    ) -> None:
+    @app_commands.command(name="steal", description="Show steal odds and choose a target.")
+    async def steal_ration(self, interaction: discord.Interaction) -> None:
         if not await self.storage_is_available(interaction):
             return
 
@@ -744,61 +891,82 @@ class RationsCog(commands.Cog):
             return
 
         thief = interaction.user
-        if username.bot:
-            await interaction.response.send_message(
-                "You cannot steal from bots.",
-                ephemeral=True,
-            )
-            return
-        if username.id == thief.id:
-            await interaction.response.send_message(
-                "You cannot steal from yourself.",
-                ephemeral=True,
-            )
-            return
-
         now = current_cst_time()
         async with self.rations_lock:
             self.release_due_laborers(now)
             thief_entry = self.get_entry(thief)
-            target_entry = self.get_entry(username)
+            chances = format_steal_chances(self.rations, now)
+            message = f"**Steal Chances**\n{chances}"
+
+            if (
+                is_dead(thief_entry)
+                or is_in_labor(thief_entry, now)
+                or parse_flag(thief_entry.get("steals"), DEFAULT_STEALS) == STEAL_USED
+            ):
+                await interaction.response.send_message(
+                    f"{message}\n\n{self.steal_unavailable_message(thief_entry, now)}",
+                    ephemeral=True,
+                )
+                return
+
+            options, total_targets = self.steal_target_options(str(thief.id), now)
+            if not options:
+                await interaction.response.send_message(
+                    f"{message}\n\nNobody can be stolen from right now.",
+                    ephemeral=True,
+                )
+                return
+
+            target_note = (
+                "\n\nShowing the first 25 available targets."
+                if total_targets > len(options)
+                else ""
+            )
+
+        await interaction.response.send_message(
+            f"{message}\n\nSelect a target to steal 1 ration from.{target_note}",
+            view=StealTargetView(self, thief.id, options),
+        )
+
+    async def resolve_steal_selection(
+        self,
+        interaction: discord.Interaction,
+        target_user_id: str,
+    ) -> str:
+        if not await self.connect_storage():
+            return self.storage_error_message()
+
+        if not isinstance(interaction.user, discord.Member):
+            return "You can only steal rations inside the server."
+
+        await self.settle_due_labor_releases()
+
+        thief = interaction.user
+        now = current_cst_time()
+        async with self.rations_lock:
+            self.release_due_laborers(now)
+            thief_entry = self.get_entry(thief)
+            target_entry = self.rations.get(target_user_id)
+
+            if target_entry is None:
+                return "That target is no longer available."
+            normalize_entry(target_entry)
+            target = self.get_member_or_target(target_user_id, target_entry)
 
             if is_dead(thief_entry):
-                await interaction.response.send_message(
-                    "You died in the labor camp and cannot steal.",
-                    ephemeral=True,
-                )
-                return
+                return "You died in the labor camp and cannot steal."
             if is_in_labor(thief_entry, now):
-                await interaction.response.send_message(
-                    steal_status_message(thief_entry, now),
-                    ephemeral=True,
-                )
-                return
+                return self.steal_unavailable_message(thief_entry, now)
             if parse_flag(thief_entry.get("steals"), DEFAULT_STEALS) == STEAL_USED:
-                await interaction.response.send_message(
-                    steal_status_message(thief_entry, now),
-                    ephemeral=True,
-                )
-                return
+                return self.steal_unavailable_message(thief_entry, now)
+            if target.id == thief.id:
+                return "You cannot steal from yourself."
             if is_dead(target_entry):
-                await interaction.response.send_message(
-                    f"{username.display_name} is dead and has nothing to steal.",
-                    ephemeral=True,
-                )
-                return
+                return f"{target.display_name} is dead and has nothing to steal."
             if is_in_labor(target_entry, now):
-                await interaction.response.send_message(
-                    f"{username.display_name} is in the labor camp ⛏️ and cannot be stolen from.",
-                    ephemeral=True,
-                )
-                return
+                return f"{target.display_name} is in the labor camp and cannot be stolen from."
             if int(target_entry["total"]) <= 0:
-                await interaction.response.send_message(
-                    f"{username.display_name} has no rations to steal.",
-                    ephemeral=True,
-                )
-                return
+                return f"{target.display_name} has no rations to steal."
 
             previous_thief = dict(thief_entry)
             previous_target = dict(target_entry)
@@ -809,15 +977,15 @@ class RationsCog(commands.Cog):
             if caught:
                 release_at = send_to_labor(thief_entry, now)
                 message = (
-                    f"You were caught stealing from {username.display_name} and sent "
-                    f"to the labor camp ⛏️ until {format_release_time(release_at)}. "
+                    f"You were caught stealing from {target.display_name} and sent "
+                    f"to the labor camp until {format_release_time(release_at)}. "
                     f"Caught chance: {chance}%."
                 )
             else:
                 target_entry["total"] = int(target_entry["total"]) - 1
                 thief_entry["total"] = int(thief_entry["total"]) + 1
                 message = (
-                    f"You stole 1 ration from {username.display_name}. "
+                    f"You stole 1 ration from {target.display_name}. "
                     f"{format_ration_line(thief.display_name, int(thief_entry['total']), thief_entry, now)}"
                 )
 
@@ -829,7 +997,7 @@ class RationsCog(commands.Cog):
                 self.record_storage_error(error)
                 raise
 
-        await interaction.response.send_message(message)
+        return message
 
     @app_commands.command(name="laborcamp", description="Volunteer for the labor camp.")
     async def volunteer_labor_camp(self, interaction: discord.Interaction) -> None:
@@ -871,7 +1039,7 @@ class RationsCog(commands.Cog):
                 raise
 
         await interaction.response.send_message(
-            f"You volunteered for the labor camp ⛏️ until {format_release_time(release_at)}. "
+            f"You volunteered for the labor camp until {format_release_time(release_at)}. "
             f"Survive until release and you will earn {LABOR_PAYOUT} rations."
         )
 
@@ -914,7 +1082,7 @@ class RationsCog(commands.Cog):
                 raise
 
         await interaction.response.send_message(
-            f"{username.display_name} has been sentenced to the labor camp ⛏️ until "
+            f"{username.display_name} has been sentenced to the labor camp until "
             f"{format_release_time(release_at)}.",
             ephemeral=True,
         )
@@ -946,29 +1114,14 @@ class RationsCog(commands.Cog):
             )
             if is_in_labor(entry, now) or is_dead(entry)
         ]
-        steal_lines = [
-            format_steal_chance_line(entry)
-            for entry in sorted(
-                self.rations.values(),
-                key=lambda entry: str(entry["name"]).lower(),
-            )
-            if can_steal(entry, now)
-        ]
-
         sections = [
             "**Rations**\n"
             + ("\n".join(ration_lines) if ration_lines else "Nobody has any rations yet."),
-            "**Labor Camp ⛏️**\n"
+            "**Labor Camp**\n"
             + (
                 "\n".join(labor_lines)
                 if labor_lines
                 else "Nobody is in the labor camp."
-            ),
-            "**Can Steal Today**\n"
-            + (
-                "\n".join(steal_lines)
-                if steal_lines
-                else "Nobody can steal today."
             ),
         ]
 
