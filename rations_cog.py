@@ -298,9 +298,42 @@ def format_ration_line(
     return f"{name}: {display}{warning}{labor}"
 
 
+def format_labor_line(
+    name: object,
+    total: int,
+    entry: dict[str, object],
+    now: datetime | None = None,
+) -> str:
+    if is_dead(entry):
+        return f"{name}: ☠️ died in the labor camp"
+
+    release_at = parse_labor_release(entry.get("labor_release"))
+    release_text = (
+        f"until {format_release_time(release_at)}"
+        if release_at is not None
+        else "release pending"
+    )
+    display = ration_emojis(total) or "No rations"
+    warning = " (risk of starvation)" if total in (1, 2) else ""
+    return f"{name}: {display}{warning} ⛏️ {release_text}"
+
+
+def can_steal(entry: dict[str, object], now: datetime | None = None) -> bool:
+    return (
+        not is_dead(entry)
+        and not is_in_labor(entry, now)
+        and parse_flag(entry.get("steals"), DEFAULT_STEALS) == 1
+    )
+
+
+def format_steal_chance_line(entry: dict[str, object]) -> str:
+    chance = caught_chance_percent(int(entry["total"]))
+    return f"{entry['name']}: {chance}% chance of being sent to labor camp"
+
+
 def steal_status_message(entry: dict[str, object] | None, now: datetime | None = None) -> str:
     if entry is None:
-        return "You can steal one ration today."
+        return "Your daily steal is available."
 
     if is_dead(entry):
         return "You died in the labor camp."
@@ -310,7 +343,7 @@ def steal_status_message(entry: dict[str, object] | None, now: datetime | None =
         return f"You are in the labor camp ⛏️ until {format_release_time(release_at)}."
 
     if parse_flag(entry.get("steals"), DEFAULT_STEALS):
-        return "You can steal one ration today."
+        return "Your daily steal is available."
 
     return "You already used your steal today. It resets at 12:00 PM."
 
@@ -895,17 +928,50 @@ class RationsCog(commands.Cog):
             self.rations.values(),
             key=lambda entry: (-int(entry["total"]), str(entry["name"]).lower()),
         )
-        lines = [
+
+        ration_lines = [
             format_ration_line(entry["name"], int(entry["total"]), entry, now)
             for entry in ranked_entries
-            if int(entry["total"]) > 0 or is_in_labor(entry, now) or is_dead(entry)
+            if int(entry["total"]) > 0
+            and not is_in_labor(entry, now)
+            and not is_dead(entry)
         ]
-        leaderboard = "\n".join(lines) if lines else "Nobody has any rations yet."
-        viewer_entry = self.rations.get(str(interaction.user.id))
-        steal_status = steal_status_message(viewer_entry, now)
+        labor_lines = [
+            format_labor_line(entry["name"], int(entry["total"]), entry, now)
+            for entry in sorted(
+                self.rations.values(),
+                key=lambda entry: str(entry["name"]).lower(),
+            )
+            if is_in_labor(entry, now) or is_dead(entry)
+        ]
+        steal_lines = [
+            format_steal_chance_line(entry)
+            for entry in sorted(
+                self.rations.values(),
+                key=lambda entry: str(entry["name"]).lower(),
+            )
+            if can_steal(entry, now)
+        ]
+
+        sections = [
+            "**Rations**\n"
+            + ("\n".join(ration_lines) if ration_lines else "Nobody has any rations yet."),
+            "**Labor Camp ⛏️**\n"
+            + (
+                "\n".join(labor_lines)
+                if labor_lines
+                else "Nobody is in the labor camp."
+            ),
+            "**Can Steal Today**\n"
+            + (
+                "\n".join(steal_lines)
+                if steal_lines
+                else "Nobody can steal today."
+            ),
+        ]
 
         await interaction.response.send_message(
-            f"{leaderboard}\n\n{steal_status}\n\nGlory to the Supreme Leader"
+            "\n\n".join(sections) + "\n\nGlory to the Supreme Leader"
         )
 
     async def cog_app_command_error(
