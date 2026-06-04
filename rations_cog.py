@@ -25,7 +25,11 @@ RATIONS_SHEET_HEADER = [
     "Steals",
     "Labor_Camp_Release",
     "Dead",
+    "Stolen From",
+    "Time Stolen",
+    "Time Alive",
 ]
+RATIONS_SHEET_LAST_COLUMN = "I"
 NAME_HEADERS = {"discordname", "discordusername", "name", "username"}
 USER_ID_HEADERS = {"discordid", "id", "userid"}
 TOTAL_HEADERS = {"ration", "rations", "rationsnumber", "total"}
@@ -38,13 +42,18 @@ LABOR_RELEASE_HEADERS = {
     "releasedat",
 }
 DEAD_HEADERS = {"dead", "died"}
+STOLEN_FROM_HEADERS = {"stolenfrom", "wasstolenfrom", "stolen"}
+TIME_STOLEN_HEADERS = {"timestolen", "laststolen", "laststolenfrom", "stolenat"}
+TIME_ALIVE_HEADERS = {"timealive", "alivesince", "createdat", "firstseen"}
 try:
     CST = ZoneInfo("America/Chicago")
 except Exception:
     CST = timezone(timedelta(hours=-6))
+ADMIN_ROLE_NAMES = {"Administrator", "Developer"}
 STEAL_AVAILABLE = 0
 STEAL_USED = 1
 DEFAULT_STEALS = STEAL_AVAILABLE
+STOLEN_FROM_COOLDOWN = timedelta(hours=24)
 LABOR_PAYOUT = 2
 CAUGHT_BASE_PERCENT = 15
 CAUGHT_PERCENT_PER_RATION = 5
@@ -95,27 +104,110 @@ def parse_flag(value: object, default: int = 0) -> int:
     return default
 
 
+def format_yes_no_flag(value: object) -> str:
+    return "yes" if parse_flag(value, 0) == 1 else "no"
+
+
+def current_cst_time() -> datetime:
+    return datetime.now(CST)
+
+
+def format_cst_datetime(value: datetime | None = None) -> str:
+    value = value or current_cst_time()
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=CST)
+    return value.astimezone(CST).isoformat(timespec="minutes")
+
+
+def parse_cst_datetime(value: object) -> datetime | None:
+    if not value:
+        return None
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=CST)
+    return parsed.astimezone(CST)
+
+
+def normalize_cst_datetime(value: object) -> str:
+    parsed = parse_cst_datetime(value)
+    return format_cst_datetime(parsed) if parsed is not None else ""
+
+
 def normalize_entry(entry: dict[str, object]) -> dict[str, object]:
     entry["name"] = str(entry.get("name") or "Unknown")
     entry["total"] = parse_non_negative_int(entry.get("total"))
     entry["steals"] = parse_flag(entry.get("steals"), DEFAULT_STEALS)
     entry["labor_release"] = str(entry.get("labor_release") or "")
     entry["dead"] = parse_flag(entry.get("dead"), 0)
+    entry["stolen_from"] = parse_flag(entry.get("stolen_from"), 0)
+    entry["time_stolen"] = normalize_cst_datetime(entry.get("time_stolen"))
+    entry["time_alive"] = (
+        normalize_cst_datetime(entry.get("time_alive"))
+        or format_cst_datetime()
+    )
     return entry
 
 
 def parse_labor_release(value: object) -> datetime | None:
-    if not value:
+    return parse_cst_datetime(value)
+
+
+def stolen_from_reset_time(
+    entry: dict[str, object],
+    now: datetime | None = None,
+) -> datetime | None:
+    last_stolen = parse_cst_datetime(entry.get("time_stolen"))
+    if last_stolen is None:
         return None
 
-    try:
-        release_at = datetime.fromisoformat(str(value))
-    except ValueError:
+    reset_at = last_stolen + STOLEN_FROM_COOLDOWN
+    if reset_at <= (now or current_cst_time()):
         return None
+    return reset_at
 
-    if release_at.tzinfo is None:
-        return release_at.replace(tzinfo=CST)
-    return release_at.astimezone(CST)
+
+def was_recently_stolen_from(
+    entry: dict[str, object],
+    now: datetime | None = None,
+) -> bool:
+    return stolen_from_reset_time(entry, now) is not None
+
+
+def refresh_stolen_from_state(
+    entry: dict[str, object],
+    now: datetime | None = None,
+) -> bool:
+    normalize_entry(entry)
+    desired = 1 if was_recently_stolen_from(entry, now) else 0
+    if int(entry["stolen_from"]) == desired:
+        return False
+
+    entry["stolen_from"] = desired
+    return True
+
+
+def has_admin_or_developer_role(interaction: discord.Interaction) -> bool:
+    user = interaction.user
+    if not isinstance(user, discord.Member):
+        return False
+
+    if user.guild_permissions.administrator:
+        return True
+
+    return any(role.name in ADMIN_ROLE_NAMES for role in user.roles)
+
+
+def admin_or_developer_check():
+    return app_commands.check(has_admin_or_developer_role)
 
 
 def write_sheet_rations(
@@ -124,24 +216,29 @@ def write_sheet_rations(
 ) -> None:
     rows = [
         [
-            normalize_entry(entry)["name"],
+            (normalized_entry := normalize_entry(entry))["name"],
             user_id,
-            int(entry["total"]),
-            int(entry["steals"]),
-            entry["labor_release"],
-            int(entry["dead"]),
+            int(normalized_entry["total"]),
+            int(normalized_entry["steals"]),
+            normalized_entry["labor_release"],
+            int(normalized_entry["dead"]),
+            format_yes_no_flag(normalized_entry["stolen_from"]),
+            normalized_entry["time_stolen"],
+            normalized_entry["time_alive"],
         ]
         for user_id, entry in sorted(rations.items())
     ]
     values = [RATIONS_SHEET_HEADER, *rows]
     worksheet.update(
         values=values,
-        range_name=f"A1:F{len(values)}",
+        range_name=f"A1:{RATIONS_SHEET_LAST_COLUMN}{len(values)}",
     )
 
     first_unused_row = len(values) + 1
     if worksheet.row_count >= first_unused_row:
-        worksheet.batch_clear([f"A{first_unused_row}:F{worksheet.row_count}"])
+        worksheet.batch_clear(
+            [f"A{first_unused_row}:{RATIONS_SHEET_LAST_COLUMN}{worksheet.row_count}"]
+        )
 
 
 def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, object]]:
@@ -160,6 +257,9 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
         steals_index = 3
         labor_release_index = 4
         dead_index = 5
+        stolen_from_index = 6
+        time_stolen_index = 7
+        time_alive_index = 8
         needs_normalization = True
     elif (
         find_header_index(normalized_headers, NAME_HEADERS) is not None
@@ -176,6 +276,9 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
             LABOR_RELEASE_HEADERS,
         )
         dead_index = find_header_index(normalized_headers, DEAD_HEADERS)
+        stolen_from_index = find_header_index(normalized_headers, STOLEN_FROM_HEADERS)
+        time_stolen_index = find_header_index(normalized_headers, TIME_STOLEN_HEADERS)
+        time_alive_index = find_header_index(normalized_headers, TIME_ALIVE_HEADERS)
         needs_normalization = first_row[: len(RATIONS_SHEET_HEADER)] != RATIONS_SHEET_HEADER
     elif len(values[0]) >= 3 and values[0][1].strip().isdigit():
         rows = values
@@ -184,6 +287,9 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
         steals_index = 3
         labor_release_index = 4
         dead_index = 5
+        stolen_from_index = 6
+        time_stolen_index = 7
+        time_alive_index = 8
         needs_normalization = True
     else:
         raise RuntimeError(
@@ -191,6 +297,7 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
         )
 
     rations = {}
+    now = current_cst_time()
     for row in rows:
         user_id = row[user_id_index].strip() if len(row) > user_id_index else ""
         if not user_id:
@@ -221,16 +328,39 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
             if dead_index is not None and len(row) > dead_index
             else 0
         )
+        stolen_from = (
+            parse_flag(row[stolen_from_index], 0)
+            if stolen_from_index is not None and len(row) > stolen_from_index
+            else 0
+        )
+        time_stolen = (
+            str(row[time_stolen_index]).strip()
+            if time_stolen_index is not None and len(row) > time_stolen_index
+            else ""
+        )
+        time_alive = (
+            str(row[time_alive_index]).strip()
+            if time_alive_index is not None and len(row) > time_alive_index
+            else ""
+        )
 
-        rations[user_id] = normalize_entry(
+        entry = normalize_entry(
             {
                 "name": name or user_id,
                 "total": total,
                 "steals": steals,
                 "labor_release": labor_release,
                 "dead": dead,
+                "stolen_from": stolen_from,
+                "time_stolen": time_stolen,
+                "time_alive": time_alive,
             }
         )
+        if not time_alive:
+            needs_normalization = True
+        if refresh_stolen_from_state(entry, now):
+            needs_normalization = True
+        rations[user_id] = entry
 
     if needs_normalization:
         write_sheet_rations(worksheet, rations)
@@ -241,10 +371,6 @@ def load_sheet_rations(worksheet: gspread.Worksheet) -> dict[str, dict[str, obje
 def ration_emojis(total: int) -> str:
     bowls, rice_balls = divmod(total, 5)
     return ("🍚" * bowls) + ("🍙" * rice_balls)
-
-
-def current_cst_time() -> datetime:
-    return datetime.now(CST)
 
 
 def next_labor_release(now: datetime | None = None) -> datetime:
@@ -281,6 +407,22 @@ def next_steal_gain_time(entry: dict[str, object], now: datetime | None = None) 
 
 def format_release_time(release_at: datetime) -> str:
     return release_at.strftime("%m/%d %I:%M %p")
+
+
+def format_duration(duration: timedelta) -> str:
+    total_seconds = max(0, int(duration.total_seconds()))
+    days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, _ = divmod(remainder, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hours:
+        parts.append(f"{hours}h")
+    if minutes or not parts:
+        parts.append(f"{minutes}m")
+    return " ".join(parts)
 
 
 def is_dead(entry: dict[str, object]) -> bool:
@@ -365,7 +507,22 @@ def can_be_stolen_from(
         user_id != thief_id
         and not is_dead(entry)
         and not is_in_labor(entry, now)
+        and not was_recently_stolen_from(entry, now)
         and int(entry["total"]) > 0
+    )
+
+
+def stolen_from_cooldown_message(
+    name: object,
+    entry: dict[str, object],
+    now: datetime,
+) -> str:
+    reset_at = stolen_from_reset_time(entry, now)
+    if reset_at is None:
+        return f"{name} was already stolen from recently."
+    return (
+        f"{name} was already stolen from recently. "
+        f"They can be stolen from again at {format_release_time(reset_at)}."
     )
 
 
@@ -636,6 +793,9 @@ class RationsCog(commands.Cog):
                 "steals": DEFAULT_STEALS,
                 "labor_release": "",
                 "dead": 0,
+                "stolen_from": 0,
+                "time_stolen": "",
+                "time_alive": format_cst_datetime(),
             },
         )
         normalize_entry(entry)
@@ -785,8 +945,16 @@ class RationsCog(commands.Cog):
                     entry["name"] = member.display_name
                     names_changed = True
 
-            if names_changed:
+            cooldowns_changed = bool(self.refresh_stolen_from_states(current_cst_time()))
+            if names_changed or cooldowns_changed:
                 await asyncio.to_thread(self.save_rations)
+
+    def refresh_stolen_from_states(self, now: datetime) -> list[str]:
+        refreshed_names = []
+        for entry in self.rations.values():
+            if refresh_stolen_from_state(entry, now):
+                refreshed_names.append(str(entry["name"]))
+        return refreshed_names
 
     def release_due_laborers(self, now: datetime) -> list[str]:
         released_names = []
@@ -845,6 +1013,8 @@ class RationsCog(commands.Cog):
             released_names = self.release_due_laborers(now)
             if released_names:
                 changed = True
+            if self.refresh_stolen_from_states(now):
+                changed = True
 
             if changed:
                 await asyncio.to_thread(self.save_rations)
@@ -854,8 +1024,10 @@ class RationsCog(commands.Cog):
             return
 
         async with self.rations_lock:
-            released_names = self.release_due_laborers(current_cst_time())
-            if released_names:
+            now = current_cst_time()
+            released_names = self.release_due_laborers(now)
+            cooldown_names = self.refresh_stolen_from_states(now)
+            if released_names or cooldown_names:
                 await asyncio.to_thread(self.save_rations)
 
     @tasks.loop(time=[dt_time(hour=0, minute=0, tzinfo=CST), dt_time(hour=12, minute=0, tzinfo=CST)])
@@ -910,7 +1082,7 @@ class RationsCog(commands.Cog):
 
     @app_commands.command(name="addration", description="Add one ration to a person.")
     @app_commands.describe(username="The person receiving a ration")
-    @app_commands.checks.has_permissions(administrator=True)
+    @admin_or_developer_check()
     async def add_ration(
         self,
         interaction: discord.Interaction,
@@ -924,15 +1096,19 @@ class RationsCog(commands.Cog):
             previous_total = int(entry["total"])
             previous_dead = int(entry["dead"])
             previous_labor_release = str(entry["labor_release"])
+            previous_time_alive = str(entry["time_alive"])
             entry["total"] = previous_total + 1
             entry["dead"] = 0
             entry["labor_release"] = ""
+            if previous_dead == 1:
+                entry["time_alive"] = format_cst_datetime()
             try:
                 await asyncio.to_thread(self.save_rations)
             except Exception as error:
                 entry["total"] = previous_total
                 entry["dead"] = previous_dead
                 entry["labor_release"] = previous_labor_release
+                entry["time_alive"] = previous_time_alive
                 self.record_storage_error(error)
                 raise
 
@@ -943,7 +1119,7 @@ class RationsCog(commands.Cog):
 
     @app_commands.command(name="removeration", description="Remove one ration from a person.")
     @app_commands.describe(username="The person losing a ration")
-    @app_commands.checks.has_permissions(administrator=True)
+    @admin_or_developer_check()
     async def remove_ration(
         self,
         interaction: discord.Interaction,
@@ -1061,6 +1237,8 @@ class RationsCog(commands.Cog):
                 return f"{target.display_name} is dead and has nothing to steal."
             if is_in_labor(target_entry, now):
                 return f"{target.display_name} is in the labor camp and cannot be stolen from."
+            if was_recently_stolen_from(target_entry, now):
+                return stolen_from_cooldown_message(target.display_name, target_entry, now)
             if int(target_entry["total"]) <= 0:
                 return f"{target.display_name} has no rations to steal."
 
@@ -1079,6 +1257,8 @@ class RationsCog(commands.Cog):
                 )
             else:
                 target_entry["total"] = int(target_entry["total"]) - 1
+                target_entry["stolen_from"] = 1
+                target_entry["time_stolen"] = format_cst_datetime(now)
                 thief_entry["total"] = int(thief_entry["total"]) + 1
                 message = (
                     f"You stole 1 ration from {target.display_name}. "
@@ -1237,7 +1417,7 @@ class RationsCog(commands.Cog):
 
     @app_commands.command(name="sentencelabor", description="Send a person to labor camp.")
     @app_commands.describe(username="The person being sentenced to labor camp")
-    @app_commands.checks.has_permissions(administrator=True)
+    @admin_or_developer_check()
     async def sentence_labor_camp(
         self,
         interaction: discord.Interaction,
@@ -1327,8 +1507,11 @@ class RationsCog(commands.Cog):
         interaction: discord.Interaction,
         error: app_commands.AppCommandError,
     ) -> None:
-        if isinstance(error, app_commands.MissingPermissions):
-            message = "Only admins can change rations."
+        if isinstance(
+            error,
+            (app_commands.MissingPermissions, app_commands.CheckFailure),
+        ):
+            message = "Only admins or Developers can change rations."
         elif self.rations_storage_error is not None:
             message = self.storage_error_message()
         else:
