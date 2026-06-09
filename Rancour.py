@@ -4,11 +4,8 @@ from discord.ext import commands
 from datetime import datetime
 from discord import app_commands
 
-# --- Constants ---
 LOG_CHANNEL_ID = 1275464228421107713
 MESSAGE_LOG_CHANNEL_ID = 1272629843552501805 
-
-# --- Helper Functions ---
 
 def format_dt(dt):
     """Formats a datetime object into a standard string."""
@@ -25,8 +22,6 @@ async def send_log(guild: discord.Guild, embed: discord.Embed, channel_id: int =
         except discord.HTTPException as e:
             print(f"Failed to send log: {e}")
 
-# --- Cog Class ---
-
 class Rancour(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -37,28 +32,20 @@ class Rancour(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
-        # Role Added
         added_roles = [r for r in after.roles if r not in before.roles]
         for role in added_roles:
             embed = discord.Embed(title=":white_check_mark: Role Added to User", color=discord.Color.green(), timestamp=datetime.utcnow())
-            # FIXED: Added display_name
             embed.add_field(name="User", value=f"{after.display_name} ({after}) | {after.id}", inline=False)
             embed.add_field(name="Role", value=role.mention, inline=False)
             await send_log(after.guild, embed)
-
-        # Role Removed
         removed_roles = [r for r in before.roles if r not in after.roles]
         for role in removed_roles:
             embed = discord.Embed(title=":x: Role Removed from User", color=discord.Color.red(), timestamp=datetime.utcnow())
-            # FIXED: Added display_name
             embed.add_field(name="User", value=f"{after.display_name} ({after}) | {after.id}", inline=False)
             embed.add_field(name="Role", value=role.mention, inline=False)
             await send_log(after.guild, embed)
-
-        # Nickname Changed
         if before.nick != after.nick:
             embed = discord.Embed(title=":pencil: Nickname Changed", color=discord.Color.orange(), timestamp=datetime.utcnow())
-            # FIXED: Shows the current display_name
             embed.add_field(name="User", value=f"{after.display_name} ({after}) | {after.id}", inline=False)
             embed.add_field(name="Old Nickname", value=before.nick or "*None*", inline=True)
             embed.add_field(name="New Nickname", value=after.nick or "*None*", inline=True)
@@ -73,7 +60,6 @@ class Rancour(commands.Cog):
         embed.add_field(name="Old Message", value=before.content or "*no content*", inline=False)
         embed.add_field(name="New Message", value=after.content or "*no content*", inline=False)
         embed.add_field(name="Channel", value=before.channel.mention, inline=True)
-        # FIXED: Shows nickname in message logs
         embed.add_field(name="Author", value=f"{before.author.display_name} ({before.author}) | {before.author.id}", inline=True)
         await send_log(before.guild, embed, MESSAGE_LOG_CHANNEL_ID)
 
@@ -81,18 +67,15 @@ class Rancour(commands.Cog):
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-
         embed = discord.Embed(title=":wastebasket: Message Deleted", color=discord.Color.dark_red(), timestamp=datetime.utcnow())
         embed.add_field(name="Deleted Message", value=message.content or "*no content*", inline=False)
         embed.add_field(name="Channel", value=message.channel.mention, inline=True)
-        # FIXED: Shows nickname in delete logs
         embed.add_field(name="Author", value=f"{message.author.display_name} ({message.author}) | {message.author.id}", inline=True)
         await send_log(message.guild, embed, MESSAGE_LOG_CHANNEL_ID)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         embed = discord.Embed(title=":wave: Member Joined", color=discord.Color.green(), timestamp=datetime.utcnow())
-        # FIXED: Added display_name
         embed.add_field(name="User", value=f"{member.display_name} ({member}) | {member.id}", inline=False)
         embed.add_field(name="Account Created", value=format_dt(member.created_at), inline=False)
         await send_log(member.guild, embed)
@@ -109,7 +92,6 @@ class Rancour(commands.Cog):
         except discord.Forbidden: pass
 
         embed = discord.Embed(timestamp=datetime.utcnow())
-        # FIXED: Added display_name
         embed.add_field(name="User", value=f"{member.display_name} ({member}) | {member.id}", inline=False)
 
         if entry:
@@ -127,7 +109,6 @@ class Rancour(commands.Cog):
         if member.bot: return
 
         embed = discord.Embed(timestamp=datetime.utcnow())
-        # FIXED: Added display_name to voice logs
         user_val = f"{member.display_name} ({member}) | {member.id}"
 
         if before.channel is None and after.channel is not None:
