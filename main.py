@@ -15,6 +15,7 @@ import aiohttp
 import random
 import urllib.parse
 import requests
+
 # ---------------------------
 # 🔹 Google Sheets Setup
 # ---------------------------
@@ -48,7 +49,6 @@ sheet = sheet_client.open_by_key(sheet_id).sheet1
 RSN_SHEET_TAB_NAME = "Tracker"
 rsn_sheet = sheet_client.open_by_key("1ZwJiuVMp-3p8UH0NCVYTV9_UVI26jl5kWu2nvdspl9k").worksheet("Tracker")
 
-
 # ---------------------------
 # 🔹 Coffer Sheets Setup
 # ---------------------------
@@ -81,7 +81,6 @@ coffer_sheet = sheet_client_coffer.open_by_key(coffer_sheet_id).worksheet(COFFER
 EVENTS_SHEET_ID = "1ycltDSLJeKTLAHzVeYZ6JKwIV5A7md8Lh7IetvVljEc"
 events_sheet = sheet_client_coffer.open_by_key(EVENTS_SHEET_ID).worksheet("Event Inputs")
 
-
 # ---------------------------
 # 🔹 Discord Bot Setup
 # ---------------------------
@@ -113,19 +112,17 @@ MENTOR_ROLE_ID = 1306021911830073414
 SANG_ROLE_ID = 1387153629072592916
 TOB_ROLE_ID = 1272694636921753701
 EVENTS_ROLE_ID = 1298358942887317555
-GUILD_ID = 1272629330115297330 # <-- Added your Guild ID for command syncing
+GUILD_ID = 1272629330115297330
 
 SENIOR_STAFF_CHANNEL_ID = 1336473990302142484  # Channel for approval notifications.
 ADMINISTRATOR_ROLE_ID = 1272961765034164318    # Role that can approve actions.
 SENIOR_STAFF_ROLE_ID = 1336473488159936512    # Role that can approve actions.
 INACTIVE_ROLE_ID = 1392889183265230848         # Role for inactive members
 
-# --- NEW SUPPORT PANEL CONFIG ---
-SUPPORT_PANEL_CHANNEL_ID = 1422397857142542346 # Channel where the support panel will be.
-SUPPORT_TICKET_CHANNEL_ID = 1422397857142542346 # Channel where support tickets are created.
+SUPPORT_PANEL_CHANNEL_ID = 1422397857142542346
+SUPPORT_TICKET_CHANNEL_ID = 1422397857142542346
 
 
-# Other constants
 REQUIRED_ROLE_NAME = "Event Staff"
 CURRENCY_SYMBOL = " 💰"
 WATCH_CHANNEL_IDS = [
@@ -133,7 +130,6 @@ WATCH_CHANNEL_IDS = [
     1272648472184487937
 ]
 
-# Timezone Definition
 CST = ZoneInfo("America/Chicago")
 
 
@@ -575,7 +571,6 @@ async def help(interaction: discord.Interaction):
         inline=False
     )
 
-    # This section will now also include commands from your cog
     embed.add_field(
         name="🩸 Sanguine Sunday/Saturday (ToB)",
         value="""
@@ -610,6 +605,7 @@ async def help(interaction: discord.Interaction):
 # ---------------------------
 # 🔹 Rank System Configuration
 # ---------------------------
+
 RANK_HIERARCHY = ["Sergeant", "TzTok", "Officer", "Commander", "TzKal"]
 SPECIAL_RANKS = ["Curator", "Achiever", "Clogger", "Pet Hunter"]
 
@@ -632,6 +628,7 @@ RANK_REQS = {
 # ---------------------------
 # 🔹 Automated Skipped Rank Notifier Event
 # ---------------------------
+
 @bot.event
 async def on_thread_create(thread: discord.Thread):
     if thread.parent_id != 1272648472184487937:
@@ -735,6 +732,7 @@ async def on_thread_create(thread: discord.Thread):
 # ---------------------------
 # 🔹 Welcome
 # ---------------------------
+
 class WelcomeView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -967,7 +965,6 @@ class SupportTicketActionView(View):
             )
             embed.set_footer(text=f"Approved by {interaction.user.display_name}")
 
-            # Edit the original message, replacing the view with the close button
             await interaction.response.edit_message(embed=embed, view=CloseThreadView())
 
         except discord.Forbidden:
@@ -1093,7 +1090,7 @@ async def rsn_writer():
             else:
                 old_rsn = ""
                 rsn_sheet.append_row([
-                    member.display_name,  # current Discord display name
+                    member.display_name,
                     str(member.id),
                     old_rsn,
                     rsn_value,
@@ -1113,17 +1110,12 @@ class RSNModal(discord.ui.Modal, title="Register RSN"):
         await interaction.response.defer(ephemeral=True)
 
         try:
-            # enqueue the update instead of writing directly
             await rsn_write_queue.put((interaction.user, str(self.rsn)))
-
-            # Quick acknowledgement
             await interaction.followup.send(
                 f"✅ Your RSN **{self.rsn}** has been submitted! "
                 "It will be saved in the records shortly.",
                 ephemeral=True
             )
-
-            # add role after successful registration
             guild = interaction.guild
             registered_role = discord.utils.get(guild.roles, name="Registered")
             if registered_role and registered_role not in interaction.user.roles:
@@ -1132,8 +1124,6 @@ class RSNModal(discord.ui.Modal, title="Register RSN"):
                     f"🎉 You’ve been given the {registered_role.mention} role!",
                     ephemeral=True
                 )
-
-            # attempt nickname change
             try:
                 await interaction.user.edit(nick=str(self.rsn))
             except discord.Forbidden:
@@ -1142,7 +1132,6 @@ class RSNModal(discord.ui.Modal, title="Register RSN"):
                     "Please update it manually.",
                     ephemeral=True
                 )
-
         except Exception as e:
             await interaction.followup.send(
                 f"❌ Failed to update RSN: `{e}`",
@@ -1182,7 +1171,6 @@ async def rsn_panel(interaction: discord.Interaction):
         ephemeral=False
     )
 
-
 @tree.command(name="rsn", description="Check your registered RSN.")
 async def rsn(interaction: discord.Interaction):
     member_id = str(interaction.user.id)
@@ -1199,7 +1187,6 @@ async def rsn(interaction: discord.Interaction):
             "⚠️ You have not registered an RSN yet. Use /rsn_panel to register.",
             ephemeral=True
         )
-
 
 @rsn_panel.error
 async def rsn_panel_error(interaction: discord.Interaction, error):
@@ -1470,7 +1457,6 @@ def escape_markdown(text: str) -> str:
     to_escape = r"\*_~`>|"
     return re.sub(f"([{re.escape(to_escape)}])", r"\\\1", text)
 
-
 # ---------------------------
 # 🔹 Discord Modals and Commands
 # ---------------------------
@@ -1712,7 +1698,6 @@ async def bank(interaction: discord.Interaction):
         ephemeral=False
     )
 
-
 # ---------------------------
 # 🔹 Chat Export Tool
 # ---------------------------
@@ -1784,21 +1769,15 @@ async def send_support_panel(channel: discord.TextChannel):
 🎓 **Mentor Support:** For staff members who are also official mentors and can assist with PvM/raid-related questions from Mentors, Mentor Ticket control, and assist with adding new Mentors.""",
         color=discord.Color.teal()
     )
-
-    # Check if the panel already exists
     async for message in channel.history(limit=5):
         if message.author == bot.user and message.embeds and message.embeds[0].title == embed.title:
-            # It already exists, do nothing.
             return
 
-    # If it doesn't exist, purge and post.
     await channel.purge(limit=10)
     await channel.send(embed=embed, view=SupportRoleView())
 
-
 from discord.ui import Modal, TextInput, View, Button
 from typing import Optional
-# (Make sure other imports like discord, os, etc. are at the top of your file)
 
 # ---------------------------
 # 🔹 Collat Notifier
@@ -1878,7 +1857,7 @@ class CollatButtons(discord.ui.View):
     async def request_item(self, interaction: discord.Interaction, button: discord.ui.Button):
         original_message, author, mentioned = await get_original_message_actors(interaction)
         if not original_message:
-            return # Error already sent by helper
+            return
 
         if not (interaction.user == author or (mentioned and interaction.user == mentioned)):
             await interaction.response.send_message("You are not allowed to interact with this post.", ephemeral=True)
@@ -1905,7 +1884,7 @@ class CollatButtons(discord.ui.View):
     async def item_returned(self, interaction: discord.Interaction, button: discord.ui.Button):
         original_message, author, mentioned = await get_original_message_actors(interaction)
         if not original_message:
-            return # Error already sent
+            return
         
         if not (interaction.user == author or (mentioned and interaction.user == mentioned)):
             await interaction.response.send_message("You are not allowed to interact with this post.", ephemeral=True)
@@ -2011,14 +1990,12 @@ async def on_ready():
     bot.add_view(CloseThreadView())
     bot.add_view(CollatButtons())
     
-    # Add persistent views for role panels
-    if bot.get_channel(1272648586198519818): # Check if role_channel exists
+    if bot.get_channel(1272648586198519818):
         guild = bot.get_guild(GUILD_ID)
         if guild:
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
-            bot.add_view(EventsView(guild))          
-    # Add persistent view for timezone panel
+            bot.add_view(EventsView(guild))        
     if bot.get_channel(1398775387139342386):
         guild = bot.get_guild(GUILD_ID)
         if guild:
@@ -2053,8 +2030,6 @@ async def on_ready():
     if role_channel:
         guild = role_channel.guild
         print("🔄 Purging and reposting role assignment panels...")
-
-        # Purge old messages from the bot
         try:
             async for msg in role_channel.history(limit=50):
                 if msg.author == bot.user:
@@ -2084,7 +2059,7 @@ async def on_ready():
 
 async def main():
     async with bot:
-        cogs_to_load = ["sanguine_cog", "Rancour", "rations_cog"]
+        cogs_to_load = ["Rancour", "rations_cog"]
         for cog_name in cogs_to_load:
             try:
                 await bot.load_extension(cog_name)
