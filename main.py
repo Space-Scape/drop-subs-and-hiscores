@@ -6,6 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 import asyncio
 import re
+from google.oauth2 import service_account
 from discord.ui import Modal, TextInput, View, Button
 from typing import Optional
 from datetime import datetime, timezone
@@ -43,17 +44,18 @@ RSN_SHEET_TAB_NAME = "Tracker"
 rsn_sheet = sheet_client.open_by_key(RSN_SHEET_ID).worksheet(RSN_SHEET_TAB_NAME)
 
 credentials_dict_coffer = {
-  "type": os.getenv('COFFER_TYPE'),
-  "project_id": os.getenv('COFFER_ID'),
-  "private_key_id": os.getenv('COFFER_PRIVATE_KEY_ID'),
-  "private_key": os.getenv('COFFER_PRIVATE_KEY').replace("\\n", "\n") if os.getenv('COFFER_PRIVATE_KEY') else "",
-  "client_email": os.getenv('COFFER_CLIENT_EMAIL'),
-  "client_id": os.getenv('COFFER_CLIENT_ID'),
-  "auth_uri": os.getenv('COFFER_AUTH_URI'),
-  "token_uri": os.getenv('COFFER_TOKEN_URI'),
-  "auth_provider_x509_cert_url": os.getenv('COFFER_AUTH_PROVIDER_X509_CERT_URL'),
-  "client_x509_cert_url": os.getenv('COFFER_CLIENT_X509_CERT_URL'),
-  "universe_domain": os.getenv('COFFER_UNIVERSE_DOMAIN')
+    "type": os.environ.get("GOOGLE_TYPE", "service_account"),
+    "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
+    "private_key_id": os.environ.get("GOOGLE_PRIVATE_KEY_ID"),
+    # The .replace() is critical to fix newline escaping issues in environment variables
+    "private_key": os.environ.get("GOOGLE_PRIVATE_KEY", "").replace('\\n', '\n'),
+    "client_email": os.environ.get("GOOGLE_CLIENT_EMAIL"),
+    "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+    "auth_uri": os.environ.get("GOOGLE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth"),
+    "token_uri": os.environ.get("GOOGLE_TOKEN_URI", "https://oauth2.googleapis.com/token"),
+    "auth_provider_x509_cert_url": os.environ.get("GOOGLE_AUTH_PROVIDER_X509_CERT_URL", "https://www.googleapis.com/oauth2/v1/certs"),
+    "client_x509_cert_url": os.environ.get("GOOGLE_CLIENT_X509_CERT_URL"),
+    "universe_domain": os.environ.get("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com")
 }
 
 coffer_creds = service_account.Credentials.from_service_account_info(credentials_dict_coffer, scopes=scope)
