@@ -56,7 +56,7 @@ credentials_dict_coffer = {
   "universe_domain": os.getenv('COFFER_UNIVERSE_DOMAIN')
 }
 
-coffer_creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict_coffer, scope)
+coffer_creds = service_account.Credentials.from_service_account_info(credentials_dict_coffer, scopes=scope)
 sheet_client_coffer = gspread.authorize(coffer_creds)
 
 COFFER_SHEET_ID = "1U0BSQk4iVTKNCmBCNP6B_PsD8416KRvwswsJlW-aWJ0"
