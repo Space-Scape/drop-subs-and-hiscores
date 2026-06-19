@@ -736,7 +736,7 @@ async def on_ready():
 
 async def main():
     async with bot:
-        bot_token = os.getenv('DISCORD_BOT_TOKEN')
+        bot_token = os.getenv('DISCORD_TOKEN')
         if bot_token:
             await bot.start(bot_token)
         else:
