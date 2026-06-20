@@ -129,6 +129,8 @@ async def rules(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True, thinking=True)
 
     rule_data = [
+        ("No unsolicited DM's",
+         "If you have any issues or want to directly communicate with admins privately, DO NOT dm them directly; instead, utilize the ticket systems. We will not respond to direct DMs."),
         ("Zero Tolerance for Toxicity", 
          "Disrespect, toxicity, and elitism are strictly prohibited. Treat everyone with respect, or you will be removed. This is a friendly environment, and there are plenty of other clans out there."),
         ("No Heavy Religion or Politics", 
