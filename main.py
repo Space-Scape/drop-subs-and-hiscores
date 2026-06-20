@@ -87,7 +87,7 @@ INACTIVE_ROLE_ID = 1517388929655898233
 RSN_CHANNEL_ID = 1517389307722076332
 ROLE_CHANNEL_ID = 1517402556651802731
 
-CURRENCY_SYMBOL = "💰" # Update to custom emoji if needed
+CURRENCY_SYMBOL = "💰"
 CST = ZoneInfo("America/Chicago")
 
 # ---------------------------
