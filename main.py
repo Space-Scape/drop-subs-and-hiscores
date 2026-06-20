@@ -324,14 +324,42 @@ class RoleButton(Button):
         except Exception:
             pass
 
-class RolePanelView(View):
+class RaidsView(View):
     def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
 
-        # Edit these to match Reflect's roles
-        self.add_item(RoleButton("Events", "🎉"))
-        self.add_item(RoleButton("PvM", "⚔️"))
+        self.add_item(RoleButton("Theatre of Blood", get_emoji("tob")))
+        self.add_item(RoleButton("Chambers of Xeric", get_emoji("cox")))
+        self.add_item(RoleButton("Tombs of Amascut", get_emoji("toa")))
+        self.add_item(RoleButton("Theatre of Blood Hard Mode", get_emoji("hmt")))
+        self.add_item(RoleButton("Chambers of Xeric Challenge Mode", get_emoji("cm")))
+
+
+class BossesView(View):
+    def __init__(self, guild: discord.Guild):
+        super().__init__(timeout=None)
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+
+        self.add_item(RoleButton("Bandos GWD", get_emoji("graardor")))
+        self.add_item(RoleButton("Saradomin GWD", get_emoji("sara")))
+        self.add_item(RoleButton("Zamorak GWD", get_emoji("zammy")))
+        self.add_item(RoleButton("Armadyl GWD", get_emoji("arma")))
+        self.add_item(RoleButton("Nex", get_emoji("nex")))
+        self.add_item(RoleButton("Corporeal Beast", get_emoji("corp")))
+        self.add_item(RoleButton("Callisto", get_emoji("callisto")))
+        self.add_item(RoleButton("Vet'ion", get_emoji("vetion")))
+        self.add_item(RoleButton("Venenatis", get_emoji("venenatis")))
+        self.add_item(RoleButton("Hueycoatl", get_emoji("hueycoatl")))
+        self.add_item(RoleButton("Yama", get_emoji("yama")))
+
+class EventsView(View):
+    def __init__(self, guild: discord.Guild):
+        super().__init__(timeout=None)
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+        self.add_item(RoleButton("Events", get_emoji("event")))
+        self.add_item(RoleButton("Learn ToB!", get_emoji("sanguine")))
+        self.add_item(RoleButton("PvP", "💀"))
 
 # ---------------------------
 # 🔹 RSN Commands
@@ -735,8 +763,13 @@ async def on_ready():
     
     guild = bot.get_guild(GUILD_ID)
     if guild:
-        if bot.get_channel(ROLE_CHANNEL_ID): bot.add_view(RolePanelView(guild))
-        if bot.get_channel(TIME_CHANNEL_ID): bot.add_view(TimezoneView(guild))
+        if bot.get_channel(ROLE_CHANNEL_ID): 
+            bot.add_view(RolePanelView(guild))
+            bot.add_view(RaidsView(guild))
+            bot.add_view(BossesView(guild))
+            bot.add_view(EventsView(guild))    
+        if bot.get_channel(TIME_CHANNEL_ID): 
+            bot.add_view(TimezoneView(guild))
 
     asyncio.create_task(rsn_writer())
 
