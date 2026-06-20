@@ -275,7 +275,7 @@ async def welcome(interaction: discord.Interaction):
         return
 
     # Update these roles for Reflect
-    roles_to_assign = ["Recruit"] 
+    roles_to_assign = ["Member"] 
     missing_roles = []
     guild = interaction.guild
 
