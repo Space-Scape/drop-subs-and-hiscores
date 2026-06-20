@@ -21,7 +21,6 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-# Primary Credentials (RSN)
 credentials_dict = {
     "type": os.getenv('GOOGLE_TYPE'),
     "project_id": os.getenv('GOOGLE_PROJECT_ID'),
