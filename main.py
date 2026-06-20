@@ -777,11 +777,12 @@ async def on_ready():
 
     asyncio.create_task(rsn_writer())
 
-    # Posting Panels
-    if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): await send_rsn_panel(rsn_channel)
-    if time_channel := bot.get_channel(ROLE_CHANNEL_ID): await send_time_panel(time_channel)
-    if role_channel := bot.get_channel(ROLE_CHANNEL_ID): await send_role_panel(role_channel)
-
+# Posting Panels
+    if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): 
+        await send_rsn_panel(rsn_channel)
+    if combined_channel := bot.get_channel(ROLE_CHANNEL_ID): 
+        await send_combined_panels(combined_channel)
+        
 async def main():
     async with bot:
         bot_token = os.getenv('DISCORD_TOKEN')
