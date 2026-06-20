@@ -86,7 +86,6 @@ ADMINISTRATOR_ROLE_ID = 1517374323889934416
 INACTIVE_ROLE_ID = 1517388929655898233
 
 RSN_CHANNEL_ID = 1517389307722076332
-TIME_CHANNEL_ID = 1517402556651802731
 ROLE_CHANNEL_ID = 1517402556651802731
 
 CURRENCY_SYMBOL = "💰" # Update to custom emoji if needed
@@ -717,6 +716,9 @@ async def send_time_panel(channel: discord.TextChannel):
 async def send_role_panel(channel: discord.TextChannel):
     await channel.purge(limit=10)
     await channel.send("⚔️ **Choose your roles:**", view=RolePanelView(channel.guild))
+    await channel.send("**Raid Roles**", view=RaidsView(channel.guild))
+    await channel.send("**Boss Roles**", view=BossesView(channel.guild))
+    await channel.send("**Event Roles**", view=EventsView(chennel.guild))
 
 # ---------------------------
 # 🔹 Bot Events
@@ -764,18 +766,17 @@ async def on_ready():
     guild = bot.get_guild(GUILD_ID)
     if guild:
         if bot.get_channel(ROLE_CHANNEL_ID): 
-            bot.add_view(RolePanelView(guild))
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
             bot.add_view(EventsView(guild))    
-        if bot.get_channel(TIME_CHANNEL_ID): 
+        if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(TimezoneView(guild))
 
     asyncio.create_task(rsn_writer())
 
     # Posting Panels
     if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): await send_rsn_panel(rsn_channel)
-    if time_channel := bot.get_channel(TIME_CHANNEL_ID): await send_time_panel(time_channel)
+    if time_channel := bot.get_channel(ROLE_CHANNEL_ID): await send_time_panel(time_channel)
     if role_channel := bot.get_channel(ROLE_CHANNEL_ID): await send_role_panel(role_channel)
 
 async def main():
