@@ -130,19 +130,31 @@ async def rules(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rules."""
     await interaction.response.defer(ephemeral=True, thinking=True)
 
-    embed_welcome = discord.Embed(
-        description="`Welcome! Please review the rules for Reflect...`",
-        color=discord.Color.from_rgb(217, 0, 0)
-    )
-    await interaction.channel.send(embed=embed_welcome)
-    await asyncio.sleep(0.5)
-
     rule_data = [
-        ("Rule 1️⃣ - Respect Others", "Rule description here."),
-        ("Rule 2️⃣ - Follow All Rules", "Rule description here.")
+        ("Zero Tolerance for Toxicity", 
+         "Disrespect, toxicity, and elitism are strictly prohibited. Treat everyone with respect, or you will be removed. This is a friendly environment, and there are plenty of other clans out there."),
+        ("No Heavy Religion or Politics", 
+         "Absolutely no heavy religious or political discussions in the server or clan chat. Keep it in your private DMs or do not discuss it at all."),
+        ("No Rage-Quitting", 
+         "Abandoning a raid or boss mid-trip without a legitimate reason is unacceptable. It's better to leave at the start if anything, but leaving your team without saying anything will result in a warning."),
+        ("No Doxing or Privacy Breaches", 
+         "Sharing another person’s personal information without their explicit consent will result in an immediate, permanent ban. No exceptions."),
+        ("Strict ToS Adherence", 
+         "Being caught Macroing, Real World Trading (RWT), solicitation, and hate speech (slurs, racist jokes, attacks on religions, nationalities, or identities) result in an instant, unappealable ban. Ignorance of Jagex or Discord ToS is not an excuse; it's mostly common sense. Just don't do it."),
+        ("No Scamming, Luring, or Begging", 
+         "Scammers and lurers will be instantly banned and submitted to RuneWatch. Begging is prohibited and will result in a warning."),
+        ("Mandatory Loot Splitting", 
+         "All uniques obtained in group content MUST be split, or it should be stated you are FFA before starting. This also applies to Ironmen and FFA worlds. Saying you can not split late into a raid or PvM trip is treated as scamming."),
+        ("Approved Clients Only", 
+         "Using cheat plug-ins or unofficial, unapproved clients is strictly prohibited. Cheaters will be removed if proof is provided."),
+        ("IGN Matching", 
+         "Your RSN should be linked through https://discord.com/channels/1517374163655065631/1517389459459538994")
+    ]
+    rule_colors = [
+        (206, 2, 2), (201, 4, 4), (195, 5, 5), (190, 6, 6),
+        (185, 7, 7), (179, 9, 9), (174, 10, 10), (168, 12, 12), (168, 12, 12)
     ]
 
-    rule_colors = [(206, 2, 2), (201, 4, 4)]
     rule_embeds = [
         discord.Embed(title=title, description=description, color=discord.Color.from_rgb(*rule_colors[i]))
         for i, (title, description) in enumerate(rule_data)
