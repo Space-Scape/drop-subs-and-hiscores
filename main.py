@@ -47,7 +47,6 @@ credentials_dict_coffer = {
     "type": os.environ.get("GOOGLE_TYPE", "service_account"),
     "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
     "private_key_id": os.environ.get("GOOGLE_PRIVATE_KEY_ID"),
-    # The .replace() is critical to fix newline escaping issues in environment variables
     "private_key": os.environ.get("GOOGLE_PRIVATE_KEY", "").replace('\\n', '\n'),
     "client_email": os.environ.get("GOOGLE_CLIENT_EMAIL"),
     "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
@@ -86,7 +85,7 @@ STAFF_ROLE_ID = 1517385637857333358
 ADMINISTRATOR_ROLE_ID = 1517374323889934416
 INACTIVE_ROLE_ID = 1517388929655898233
 
-RSN_CHANNEL_ID = 1517389499397701724
+RSN_CHANNEL_ID = 1517389307722076332
 TIME_CHANNEL_ID = 1517402556651802731
 ROLE_CHANNEL_ID = 1517402556651802731
 
