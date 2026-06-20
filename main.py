@@ -138,13 +138,13 @@ async def rules(interaction: discord.Interaction):
         ("No Rage-Quitting", 
          "Abandoning a raid or boss mid-trip without a legitimate reason is unacceptable. It's better to leave at the start if anything, but leaving your team without saying anything will result in a warning."),
         ("No Doxing or Privacy Breaches", 
-         "Sharing another person’s personal information without their explicit consent will result in an immediate, permanent ban. No exceptions."),
+         "Sharing another person’s personal information without their explicit consent will result in a permanent ban. No exceptions."),
         ("Strict ToS Adherence", 
-         "Being caught Macroing, Real World Trading (RWT), solicitation, and hate speech (slurs, racist jokes, attacks on religions, nationalities, or identities) result in an instant, unappealable ban. Ignorance of Jagex or Discord ToS is not an excuse; it's mostly common sense. Just don't do it."),
+         "Macroing, Real World Trading (RWT), Solicitation, and Hate Speech (slurs, racist jokes, attacks on religions, nationalities, or identities) are actions that will result in an instant, unappealable ban. Ignorance of Jagex or Discord ToS is not an excuse; it's mostly common sense. Just don't do it or find another clan."),
         ("No Scamming, Luring, or Begging", 
          "Scammers and lurers will be instantly banned and submitted to RuneWatch. Begging is prohibited and will result in a warning."),
         ("Mandatory Loot Splitting", 
-         "All uniques obtained in group content MUST be split, or it should be stated you are FFA before starting. This also applies to Ironmen and FFA worlds. Saying you can not split late into a raid or PvM trip is treated as scamming."),
+         "All uniques obtained in group content are considered to be split, and it should be stated that you are FFA before starting. This also applies to Ironmen and FFA worlds. Saying you can not split late into a raid or PvM trip is treated as scamming."),
         ("Approved Clients Only", 
          "Using cheat plug-ins or unofficial, unapproved clients is strictly prohibited. Cheaters will be removed if proof is provided."),
         ("IGN Matching", 
@@ -719,9 +719,9 @@ async def send_combined_panels(channel: discord.TextChannel):
     await channel.send(embed=discord.Embed(title="🕒 Select Your Timezones", description="Pick your active timezones."), view=TimezoneView(channel.guild))
     
     # Post Role Panels (Typo and leftover code removed)
-    await channel.send("⚔️ **Raid Roles**", view=RaidsView(channel.guild))
-    await channel.send("👹 **Boss Roles**", view=BossesView(channel.guild))
-    await channel.send("📅 **Event Roles**", view=EventsView(channel.guild))
+    await channel.send("**Raid Roles**", view=RaidsView(channel.guild))
+    await channel.send("**Boss Roles**", view=BossesView(channel.guild))
+    await channel.send("**Event Roles**", view=EventsView(channel.guild))
 
 # ---------------------------
 # 🔹 Bot Events
@@ -743,7 +743,7 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     inactive_role = discord.utils.get(after.guild.roles, id=INACTIVE_ROLE_ID)
     if inactive_role and inactive_role in (set(after.roles) - set(before.roles)):
         try:
-            await after.send(f"Hey {after.display_name}! You've been marked inactive in Reflect. Rejoin anytime!")
+            await after.send(f"Hey {after.display_name}! You've been marked inactive in Obscurity. Rejoin anytime!")
         except:
             pass
 
