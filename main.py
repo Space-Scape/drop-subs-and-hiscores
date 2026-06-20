@@ -96,14 +96,14 @@ CST = ZoneInfo("America/Chicago")
 # 🔹 Info Command
 # ---------------------------
 @bot.tree.command(name="info", description="Post general information about the clan.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
 async def info(interaction: discord.Interaction):
     """Posts a general information embed for the clan."""
     await interaction.response.defer(ephemeral=True, thinking=True)
 
     info_embed = discord.Embed(
         title="Reflect - Clan Information",
-        description="Welcome to Reflect. Edit this description with your new clan info.",
+        description=".",
         color=discord.Color.from_rgb(184, 249, 249)
     )
     await interaction.channel.send(embed=info_embed)
@@ -124,7 +124,7 @@ async def info(interaction: discord.Interaction):
 # ---------------------------
 
 @bot.tree.command(name="rules", description="Post the clan rules message.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
 async def rules(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rules."""
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -147,7 +147,7 @@ async def rules(interaction: discord.Interaction):
         ("Approved Clients Only", 
          "Using cheat plug-ins or unofficial, unapproved clients is strictly prohibited. Cheaters will be removed if proof is provided."),
         ("IGN Matching", 
-         "Your RSN should be linked through https://discord.com/channels/1517374163655065631/1517389459459538994")
+         "Your RSN should be linked through https://discord.com/channels/1517374163655065631/1517389307722076332")
     ]
     rule_colors = [
         (206, 2, 2), (201, 4, 4), (195, 5, 5), (190, 6, 6),
@@ -167,7 +167,7 @@ async def rules(interaction: discord.Interaction):
 # ---------------------------
 
 @bot.tree.command(name="rank", description="Post the clan rank requirements.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
 async def rank(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rank requirements."""
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -187,7 +187,7 @@ async def rank(interaction: discord.Interaction):
 
 @bot.tree.command(name="say", description="Makes the bot say something in the current channel.")
 @app_commands.describe(message="The message you want the bot to say.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
 async def say(interaction: discord.Interaction, message: str):
     """Makes the bot say something."""
     await interaction.channel.send(message)
@@ -392,7 +392,7 @@ class RSNPanelView(discord.ui.View):
         await interaction.response.send_modal(RSNModal())
 
 @tree.command(name="rsn_panel", description="Open the RSN registration panel.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
 async def rsn_panel(interaction: discord.Interaction):
     embed = discord.Embed(
         title="Register your RuneScape Name",
