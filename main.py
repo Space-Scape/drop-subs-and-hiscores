@@ -80,6 +80,13 @@ tree = bot.tree
 # 🔹 Main Configuration (UPDATE IDs FOR REFLECT)
 # ---------------------------
 
+COLOR_ROLES_CONFIG = [
+    ("Snow", "⚪"), ("Onyx", "⚫"), ("Rose", "🪷"), 
+    ("Dragon", "🔴"), ("Duck", "🟡"), ("Pumpkin", "🎃"), 
+    ("Voidwaker", "🟣"), ("Grey Bear", "⚪"), ("Lake", "💧")
+]
+COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
+
 GUILD_ID = 1517374163655065631
 COLLAT_CHANNEL_ID = 1517385356452958338
 STAFF_ROLE_ID = 1517385637857333358
@@ -270,6 +277,63 @@ class TicketButtons(View):
             await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
         else:
             await interaction.response.send_message(f"Ticket failed to open! Please try again...", ephemeral=True)
+
+# ---------------------------
+# 🔹 Color Panel
+# ---------------------------
+
+class ColorButton(discord.ui.Button):
+    def __init__(self, role_name: str, emoji: str, row: int):
+        super().__init__(
+            style=discord.ButtonStyle.secondary, 
+            label=role_name, 
+            emoji=emoji, 
+            custom_id=f"color_role_{role_name.replace(' ', '_')}", 
+            row=row
+        )
+        self.role_name = role_name
+
+    async def callback(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.response.send_message("This can only be used in a server.", ephemeral=True)
+            return
+        
+        guild = interaction.guild
+        if not guild: return
+        
+        role_objects = []
+        target_role = None
+        for role in guild.roles:
+            if role.name in COLOR_ROLE_NAMES:
+                role_objects.append(role)
+                if role.name == self.role_name:
+                    target_role = role
+        
+        if not target_role:
+            await interaction.response.send_message(f"Role '{self.role_name}' not found in the server. Please ask an admin to create it first.", ephemeral=True)
+            return
+        
+        roles_to_remove = [r for r in role_objects if r in interaction.user.roles and r != target_role]
+        
+        await interaction.response.defer(ephemeral=True)
+        try:
+            if roles_to_remove:
+                await interaction.user.remove_roles(*roles_to_remove, reason="Color role switch")
+            
+            if target_role not in interaction.user.roles:
+                await interaction.user.add_roles(target_role, reason="Color role selection")
+                await interaction.followup.send(f"Equipped the **{self.role_name}** color!", ephemeral=True)
+            else:
+                await interaction.user.remove_roles(target_role, reason="Color role toggle off")
+                await interaction.followup.send(f"Removed the **{self.role_name}** color.", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.followup.send("I lack permissions to manage roles. Please ensure my bot role is higher than the color roles.", ephemeral=True)
+
+class ColorPanelView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        for i, (role_name, emoji) in enumerate(COLOR_ROLES_CONFIG):
+            self.add_item(ColorButton(role_name, emoji, row=i // 5))
 
 # ---------------------------
 # 🔹 Welcome
@@ -757,6 +821,12 @@ async def send_combined_panels(channel: discord.TextChannel):
 async def ticket_panel(ctx):
     embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
     await ctx.send(embed=embed, View=TicketButtons)
+
+@bot.tree.command(name="color_panel", description="Post the color role selection panel.")
+@app_commands.checks.has_any_role("Administrators")
+async def post_color_panel(interaction: discord.Interaction) -> None:
+    await interaction.response.send_message("Posting color panel...", ephemeral=True)
+    await interaction.channel.send("**Select a Color Role:**\n*(Selecting a new color will automatically remove your old one)*", view=ColorPanelView())
 
 @bot.event
 async def on_message(message: discord.Message):
