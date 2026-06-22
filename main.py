@@ -830,6 +830,19 @@ async def send_combined_panels(channel: discord.TextChannel):
 # 🔹 Bot Events
 # ---------------------------
 
+@bot.tree.command(name="setup_panels", description="Posts the RSN and Role panels to their channels.")
+@app_commands.checks.has_any_role("Administrators")
+async def setup_panels(interaction: discord.Interaction):
+    await interaction.response.send_message("Setting up panels...", ephemeral=True)
+    
+    if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): 
+        await send_rsn_panel(rsn_channel)
+        
+    if combined_channel := bot.get_channel(ROLE_CHANNEL_ID): 
+        await send_combined_panels(combined_channel)
+        
+    await interaction.followup.send("Panels have been deployed!", ephemeral=True)
+
 @bot.tree.command(name="ticket_panel", description="Post the ticket system panel in the current channel.")
 @app_commands.checks.has_any_role("Administrators")
 async def ticket_panel(interaction: discord.Interaction):
@@ -900,12 +913,6 @@ async def on_ready():
             bot.add_view(TimezoneView(guild))
 
     asyncio.create_task(rsn_writer())
-
-# Posting Panels
-    if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): 
-        await send_rsn_panel(rsn_channel)
-    if combined_channel := bot.get_channel(ROLE_CHANNEL_ID): 
-        await send_combined_panels(combined_channel)
         
 async def main():
     async with bot:
