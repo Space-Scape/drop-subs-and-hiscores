@@ -124,7 +124,7 @@ async def info(interaction: discord.Interaction):
 # ---------------------------
 
 @bot.tree.command(name="rules", description="Post the clan rules message.")
-@app_commands.checks.has_any_role("Administrators")
+@app_commands.checks.has_any_role("1517751423226613922")
 async def rules(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rules."""
     await interaction.response.defer(ephemeral=True, thinking=True)
