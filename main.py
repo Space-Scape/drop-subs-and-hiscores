@@ -753,7 +753,7 @@ async def send_combined_panels(channel: discord.TextChannel):
 # ---------------------------
 
 @bot.tree.command()
-async def welcome_panel(ctx):
+async def ticket_panel(ctx):
     embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
     await ctx.send(embed=embed, View=TicketButtons)
 
@@ -795,7 +795,7 @@ async def on_ready():
 
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
-    bot.add_view(TicketButtons)
+    bot.add_view(TicketButtons())
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
