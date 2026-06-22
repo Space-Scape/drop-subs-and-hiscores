@@ -96,7 +96,7 @@ CST = ZoneInfo("America/Chicago")
 # 🔹 Info Command
 # ---------------------------
 @bot.tree.command(name="info", description="Post general information about the clan.")
-@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
+@app_commands.checks.has_any_role("Administrators")
 async def info(interaction: discord.Interaction):
     """Posts a general information embed for the clan."""
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -124,7 +124,7 @@ async def info(interaction: discord.Interaction):
 # ---------------------------
 
 @bot.tree.command(name="rules", description="Post the clan rules message.")
-@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
+@app_commands.checks.has_any_role("Administrators")
 async def rules(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rules."""
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -169,7 +169,7 @@ async def rules(interaction: discord.Interaction):
 # ---------------------------
 
 @bot.tree.command(name="rank", description="Post the clan rank requirements.")
-@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
+@app_commands.checks.has_any_role("Administrators")
 async def rank(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rank requirements."""
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -189,7 +189,7 @@ async def rank(interaction: discord.Interaction):
 
 @bot.tree.command(name="say", description="Makes the bot say something in the current channel.")
 @app_commands.describe(message="The message you want the bot to say.")
-@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
+@app_commands.checks.has_any_role("Administrators")
 async def say(interaction: discord.Interaction, message: str):
     """Makes the bot say something."""
     await interaction.channel.send(message)
@@ -447,7 +447,7 @@ class RSNPanelView(discord.ui.View):
         await interaction.response.send_modal(RSNModal())
 
 @tree.command(name="rsn_panel", description="Open the RSN registration panel.")
-@app_commands.checks.has_any_role("Administrators, Server Admin, Clan Admin, Community Admin")
+@app_commands.checks.has_any_role("Administrators")
 async def rsn_panel(interaction: discord.Interaction):
     embed = discord.Embed(
         title="Register your RuneScape Name",
@@ -753,6 +753,7 @@ async def send_combined_panels(channel: discord.TextChannel):
 # ---------------------------
 
 @bot.tree.command()
+@app_commands.checks.has_any_role("Administrators")
 async def ticket_panel(ctx):
     embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
     await ctx.send(embed=embed, View=TicketButtons)
