@@ -63,6 +63,8 @@ COFFER_SHEET_ID = "1U0BSQk4iVTKNCmBCNP6B_PsD8416KRvwswsJlW-aWJ0"
 COFFER_SHEET_TAB_NAME = "Coffer"
 coffer_sheet = sheet_client_coffer.open_by_key(COFFER_SHEET_ID).worksheet(COFFER_SHEET_TAB_NAME)
 
+TICKET_CHANNEL_ID = 1518463880203079811
+
 # ---------------------------
 # 🔹 Discord Bot Setup
 # ---------------------------
@@ -247,6 +249,29 @@ async def help(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 # ---------------------------
+# 🔹 Tickets
+# ---------------------------
+class TicketButtons(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="thread_button")
+
+    async def open_thread_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if isinstance(interaction.channel, discord.TextChannel):
+            thread_name = f"Welcome - {interaction.user.display_name}"
+            thread = await interaction.channel.create_thread(
+                name=thread_name,
+                type=discord.ChannelType.private_thread,
+                auto_archive_duration=1440
+            )
+            await thread.add_user(interaction.user)
+            await thread.send("Thanks for your interest in joining Obscurity! Please send the item/level requirements below and someone will help you.")
+            await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"Ticket failed to open! Please try again...", ephemeral=True)
+
+# ---------------------------
 # 🔹 Welcome
 # ---------------------------
 
@@ -287,8 +312,10 @@ async def welcome(interaction: discord.Interaction):
             missing_roles.append(role_name)
 
     embed = discord.Embed(
-        title="🎉 Welcome to Reflect! 🎉",
-        description=f"Happy to have you with us, {ticket_creator.mention}! Edit this message for your new server.",
+        title="🎉 Welcome to Obscurity! 🎉",
+        description=f"""Happy to have you with us, {ticket_creator.mention}!\n
+                    Head over to https://discord.com/channels/1517374163655065631/1517389459459538994 to familiarize yourself with our rules so you aren't accidentally breaking them!\n
+                    """,
         color=discord.Color.blurple()
     )
 
@@ -725,6 +752,11 @@ async def send_combined_panels(channel: discord.TextChannel):
 # 🔹 Bot Events
 # ---------------------------
 
+@bot.tree.command()
+async def welcome(ctx):
+    embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
+    await ctx.send(embed=embed, View=TicketButtons)
+
 @bot.event
 async def on_message(message: discord.Message):
     if message.author.bot: return
@@ -763,9 +795,10 @@ async def on_ready():
 
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
+    bot.add_view(TicketButtons)
     
     guild = bot.get_guild(GUILD_ID)
-    if guild:
+    if guild: 
         if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
