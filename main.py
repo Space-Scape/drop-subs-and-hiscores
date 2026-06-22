@@ -262,9 +262,8 @@ class TicketButtons(View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="thread_button")
-
-    async def open_thread_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="welcome_ticket_btn")
+    async def open_welcome_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
         if isinstance(interaction.channel, discord.TextChannel):
             thread_name = f"Welcome - {interaction.user.display_name}"
             thread = await interaction.channel.create_thread(
@@ -273,10 +272,25 @@ class TicketButtons(View):
                 auto_archive_duration=1440
             )
             await thread.add_user(interaction.user)
-            await thread.send("Thanks for your interest in joining Obscurity! Please send the item/level requirements below and someone will help you.")
+            await thread.send("Thanks for your interest in joining! Please send the item/level requirements below and someone will help you.")
             await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
         else:
-            await interaction.response.send_message(f"Ticket failed to open! Please try again...", ephemeral=True)
+            await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
+
+    @discord.ui.button(label="Support", style=discord.ButtonStyle.secondary, custom_id="support_ticket_btn")
+    async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if isinstance(interaction.channel, discord.TextChannel):
+            thread_name = f"Support - {interaction.user.display_name}"
+            thread = await interaction.channel.create_thread(
+                name=thread_name,
+                type=discord.ChannelType.private_thread,
+                auto_archive_duration=1440
+            )
+            await thread.add_user(interaction.user)
+            await thread.send(f"Hello {interaction.user.mention}, how can staff help you today?")
+            await interaction.response.send_message(f"Support ticket opened here: {thread.mention}", ephemeral=True)
+        else:
+            await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
 
 # ---------------------------
 # 🔹 Color Panel
@@ -816,11 +830,19 @@ async def send_combined_panels(channel: discord.TextChannel):
 # 🔹 Bot Events
 # ---------------------------
 
-@bot.tree.command()
+@bot.tree.command(name="ticket_panel", description="Post the ticket system panel in the current channel.")
 @app_commands.checks.has_any_role("Administrators")
-async def ticket_panel(ctx):
-    embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
-    await ctx.send(embed=embed, View=TicketButtons)
+async def ticket_panel(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="🎫 Ticket Center", 
+        description="Click a button below to open a ticket.\n\n"
+                    "**Join The Clan:** Open a ticket to apply.\n"
+                    "**Support:** Open a ticket for staff assistance.",
+        color=discord.Color.blurple()
+    )
+    
+    await interaction.response.send_message("Posting ticket panel...", ephemeral=True)
+    await interaction.channel.send(embed=embed, view=TicketButtons())
 
 @bot.tree.command(name="color_panel", description="Post the color role selection panel.")
 @app_commands.checks.has_any_role("Administrators")
