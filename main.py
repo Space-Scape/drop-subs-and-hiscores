@@ -713,11 +713,13 @@ async def send_rsn_panel(channel: discord.TextChannel):
 async def send_combined_panels(channel: discord.TextChannel):
     await channel.purge(limit=20) 
     
-    await channel.send("🕒 Select Your Timezones", view=TimezoneView(channel.guild))
+    await channel.send("# 𝓣𝖎𝖒𝖊𝖟𝖔𝖓𝖊")
+    await channel.send("🕒 𝓢𝖊𝖑𝖊𝖈𝖙 𝓨𝖔𝖚𝖗 𝓣𝖎𝖒𝖊𝖟𝖔𝖓𝖊", view=TimezoneView(channel.guild))
     
-    await channel.send("**ℜ𝔞𝔦𝔡𝔰**", view=RaidsView(channel.guild))
-    await channel.send("**𝔅𝔬𝔰𝔰𝔢𝔰**", view=BossesView(channel.guild))
-    await channel.send("**𝔈𝔳𝔢𝔫𝔱𝔰**", view=EventsView(channel.guild))
+    await channel.send("# 𝕭𝖔𝖘𝖘 𝕽𝖔𝖑𝖊𝖘")
+    await channel.send("**𝕽𝖆𝖎𝖉𝖘**", view=RaidsView(channel.guild))
+    await channel.send("**𝕭𝖔𝖘𝖘𝖊𝖘**", view=BossesView(channel.guild))
+    await channel.send("**𝕰𝖛𝖊𝖓𝖙𝖘**", view=EventsView(channel.guild))
 
 # ---------------------------
 # 🔹 Bot Events
