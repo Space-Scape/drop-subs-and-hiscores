@@ -753,7 +753,7 @@ async def send_combined_panels(channel: discord.TextChannel):
 # ---------------------------
 
 @bot.tree.command()
-async def welcome(ctx):
+async def welcome_panel(ctx):
     embed = discord.Embed(title="Support Ticket", description="Opens a support ticket.")
     await ctx.send(embed=embed, View=TicketButtons)
 
