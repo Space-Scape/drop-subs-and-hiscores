@@ -322,14 +322,14 @@ async def panel_welcome(interaction: discord.Interaction):
     )
     
     embed.add_field(
-        name="Our Community",
+        name="👥 Our Community",
         value="We uphold a welcoming and positive environment. Those that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.\n We hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.\nThat being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.",
         inline=False
     )
     
     embed.add_field(
         name="⚠️ Before You Apply",
-        value="Please ensure you have read the server rules here: .",
+        value="Please ensure you have read the server rules here: https://discord.com/channels/1517374163655065631/1517389459459538994.",
         inline=False
     )
     
