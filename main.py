@@ -424,7 +424,7 @@ class VanityView(View):
         # Adding Zenyte alongside your other roles
         self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
         self.add_item(VanityTicketButton("Chamber Explorer", get_emoji("chamberexplorer")))
-        self.add_item(VanityTicketButton("Bloodletter", get_emoji("bloodletter")))
+        self.add_item(VanityTicketButton("Bloodlust", get_emoji("bloodlust")))
         self.add_item(VanityTicketButton("Tomb Raider", get_emoji("tombraider")))
         self.add_item(VanityTicketButton("Raider", get_emoji("raider")))
         self.add_item(VanityTicketButton("Pker", get_emoji("pvp")))
