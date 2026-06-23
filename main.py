@@ -64,6 +64,8 @@ COFFER_SHEET_TAB_NAME = "Coffer"
 coffer_sheet = sheet_client_coffer.open_by_key(COFFER_SHEET_ID).worksheet(COFFER_SHEET_TAB_NAME)
 
 TICKET_CHANNEL_ID = 1518463880203079811
+VANITY_CHANNEL_ID = 1519007923940884510
+
 
 # ---------------------------
 # 🔹 Discord Bot Setup
@@ -101,6 +103,7 @@ CST = ZoneInfo("America/Chicago")
 # ---------------------------
 # 🔹 Info Command
 # ---------------------------
+
 @bot.tree.command(name="info", description="Post general information about the clan.")
 @app_commands.checks.has_any_role("Administrators")
 async def info(interaction: discord.Interaction):
@@ -170,13 +173,6 @@ async def rules(interaction: discord.Interaction):
     await interaction.channel.send(embeds=rule_embeds)
     await interaction.followup.send("✅ Rules message has been posted.", ephemeral=True)
 
-# ---------------------------
-# 🔹 Rank Command
-# ---------------------------
-
-# ---------------------------
-# 🔹 Rank Command
-# ---------------------------
 
 @bot.tree.command(name="rank", description="Post the clan rank requirements.")
 @app_commands.checks.has_any_role("Administrators")
@@ -195,7 +191,7 @@ async def rank(interaction: discord.Interaction):
         ("<:tob_mentor:1519039992398217257>", "ToB Mentor", "ToB mentors will have this rank"),
         ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
         ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
-        ("<:pvp:1519037569076039701>", "PvP", "Take this if you like to do PvP"),
+        ("<:pvp:1519037569076039701>", "Pker", "Take this if you like to do PvP"),
         ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan")
     ]
 
@@ -287,6 +283,7 @@ async def help(interaction: discord.Interaction):
 # ---------------------------
 # 🔹 Tickets
 # ---------------------------
+
 class ReasonModal(discord.ui.Modal, title="Close Ticket with Reason"):
     reason = discord.ui.TextInput(
         label="Reason for closing", 
@@ -367,6 +364,68 @@ class TicketControlView(discord.ui.View):
                 await interaction.response.send_message("❌ Could not identify the original ticket creator.", ephemeral=True)
                 return
             await interaction.response.send_modal(ReasonModal(interaction.channel, creator))
+
+class VanityTicketButton(discord.ui.Button):
+    def __init__(self, role_name: str, emoji=None):
+        super().__init__(
+            label=role_name, 
+            style=discord.ButtonStyle.secondary, 
+            emoji=emoji, 
+            custom_id=f"vanity_ticket_{role_name.replace(' ', '_')}"
+        )
+        self.role_name = role_name
+
+    async def callback(self, interaction: discord.Interaction):
+        if not isinstance(interaction.channel, discord.TextChannel):
+            await interaction.response.send_message("❌ This can only be used in a text channel.", ephemeral=True)
+            return
+
+        thread_name = f"{self.role_name} - {interaction.user.display_name}"
+        thread = await interaction.channel.create_thread(
+            name=thread_name,
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(
+            title=f"⚔️ {self.role_name} Rank Application",
+            color=discord.Color.from_rgb(184, 249, 249)
+        )
+        
+        if self.role_name == "Zenyte":
+            embed.description = (
+                f"Hello {interaction.user.mention}!\n\n"
+                "To claim the **Zenyte** rank, please upload a **full-client screenshot** showing "
+                "a **Dragon Warhammer, BGS, or Elder Maul** in your inventory."
+            )
+        else:
+            embed.description = (
+                f"Hello {interaction.user.mention}!\n\n"
+                f"Please provide any required screenshots or proof to claim your **{self.role_name}** rank."
+            )
+
+        await thread.send(
+            content=f"{interaction.user.mention} <@&{ADMINISTRATOR_ROLE_ID}>", 
+            embed=embed, 
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Application ticket opened: {thread.mention}", ephemeral=True)
+
+class VanityView(View):
+    def __init__(self, guild: discord.Guild):
+        super().__init__(timeout=None)
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+        
+        # Adding Zenyte alongside your other roles
+        self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
+        self.add_item(VanityTicketButton("Chamber Explorer", get_emoji("chamberexplorer")))
+        self.add_item(VanityTicketButton("Bloodletter", get_emoji("bloodletter")))
+        self.add_item(VanityTicketButton("Tomb Raider", get_emoji("tombraider")))
+        self.add_item(VanityTicketButton("Raider", get_emoji("raider")))
+        self.add_item(VanityTicketButton("Pker", get_emoji("pvp")))
+        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed")))
+        self.add_item(VanityTicketButton("Skiller", get_emoji("skiller")))
 
 class WelcomeTicketView(View):
     def __init__(self):
@@ -1030,6 +1089,15 @@ async def setup_panels(interaction: discord.Interaction):
         
     if combined_channel := bot.get_channel(ROLE_CHANNEL_ID): 
         await send_combined_panels(combined_channel)
+
+    if vanity_channel := bot.get_channel(VANITY_CHANNEL_ID):
+        await vanity_channel.purge(limit=10)
+        embed = discord.Embed(
+            title="⚔️ Apply for Ranks",
+            description="Click a button below to open a ticket and submit proof for a specific rank.",
+            color=discord.Color.from_rgb(184, 249, 249)
+        )
+        await vanity_channel.send(embed=embed, view=VanityView(interaction.guild))
         
     await interaction.followup.send("Panels have been deployed!", ephemeral=True)
 
@@ -1090,6 +1158,8 @@ async def on_ready():
             bot.add_view(EventsView(guild))    
         if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(TimezoneView(guild))
+        if bot.get_channel(VANITY_CHANNEL_ID):
+            bot.add_view(VanityView(guild))
 
     asyncio.create_task(rsn_writer())
         
