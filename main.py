@@ -421,15 +421,15 @@ class VanityView(View):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         
-        # Adding Zenyte alongside your other roles
         self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
-        self.add_item(VanityTicketButton("Chamber Explorer", get_emoji("chamberexplorer")))
-        self.add_item(VanityTicketButton("Bloodlust", get_emoji("bloodlust")))
-        self.add_item(VanityTicketButton("Tomb Raider", get_emoji("tombraider")))
-        self.add_item(VanityTicketButton("Raider", get_emoji("raider")))
-        self.add_item(VanityTicketButton("Pker", get_emoji("pvp")))
-        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed")))
-        self.add_item(VanityTicketButton("Skiller", get_emoji("skiller")))
+        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) # Assuming Maxed needs proof since it wasn't excluded!
+        
+        self.add_item(RoleButton("Bloodlust", get_emoji("bloodlust")))
+        self.add_item(RoleButton("Chamber Explorer", get_emoji("chamberexplorer")))
+        self.add_item(RoleButton("Tomb Raider", get_emoji("tombraider")))
+        self.add_item(RoleButton("Raider", get_emoji("raider")))
+        self.add_item(RoleButton("Pker", get_emoji("pvp")))
+        self.add_item(RoleButton("Skiller", get_emoji("skiller")))
 
 class WelcomeTicketView(View):
     def __init__(self):
