@@ -344,7 +344,7 @@ async def panel_welcome(interaction: discord.Interaction):
 @app_commands.checks.has_any_role("Administrators")
 async def panel_support(interaction: discord.Interaction):
     embed = discord.Embed(
-        title="🛠️ Staff Support Center", 
+        title="🆘 Support Center", 
         description="Need assistance from the administration team? Open a private support ticket and we will help you as soon as we are available.",
         color=discord.Color.from_rgb(43, 45, 49)
     )
@@ -361,7 +361,7 @@ async def panel_support(interaction: discord.Interaction):
         inline=False
     )
 
-    embed.set_footer(text="Obscurity Admin Team • Misuse of the ticket system may result in a warning")
+    embed.set_footer(text="Obscurity Admin Team • Please don't misuse the ticket system and refrain from messaging admins directly.")
     
     await interaction.response.send_message("Posting Support panel...", ephemeral=True)
     await interaction.channel.send(embed=embed, view=SupportTicketView())
