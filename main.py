@@ -77,7 +77,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
 # ---------------------------
-# 🔹 Main Configuration (UPDATE IDs FOR REFLECT)
+# 🔹 Main Configuration
 # ---------------------------
 
 COLOR_ROLES_CONFIG = [
@@ -108,7 +108,7 @@ async def info(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True, thinking=True)
 
     info_embed = discord.Embed(
-        title="Reflect - Clan Information",
+        title="Obscurity - Clan Information",
         description=".",
         color=discord.Color.from_rgb(184, 249, 249)
     )
@@ -174,20 +174,50 @@ async def rules(interaction: discord.Interaction):
 # 🔹 Rank Command
 # ---------------------------
 
+# ---------------------------
+# 🔹 Rank Command
+# ---------------------------
+
 @bot.tree.command(name="rank", description="Post the clan rank requirements.")
 @app_commands.checks.has_any_role("Administrators")
 async def rank(interaction: discord.Interaction):
     """Posts a series of embeds detailing the clan rank requirements."""
     await interaction.response.defer(ephemeral=True, thinking=True)
 
-    info_embed = discord.Embed(
-        title="How to apply for a role in Reflect",
-        description="Edit this text to reflect your new server's ranking structure.",
-        color=discord.Color.from_rgb(184, 249, 249)
-    )
-    await interaction.channel.send(embed=info_embed)
+    rank_data = [
+        ("<:zenyte:1519040363686527187>", "Zenyte", "This role requires a dragon warhammer, BGS, or elder maul and should be applied for."),
+        ("<:bloodlust:1519037132704841738>", "ToB Rank", "Take this rank if your favorite raid is ToB"),
+        ("<:xerician:1519039860269121796>", "CoX Rank", "Take this rank if your favorite raid is CoX"),
+        ("<:tombraider:1519040232148697191>", "ToA Rank", "Take this rank if your favorite raid is ToA"),
+        ("<:raider:1519037265878319317>", "Raider Rank", "Take this rank if you just like to raid"),
+        ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*"),
+        ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling"),
+        ("<:tob_mentor:1519039992398217257>", "ToB Mentor", "ToB mentors will have this rank"),
+        ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
+        ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
+        ("<:pvp:1519037569076039701>", "PvP", "Take this if you like to do PvP"),
+        ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan")
+    ]
 
-    await interaction.followup.send("✅ Rank message has been posted.", ephemeral=True)
+    rank_colors = [
+        (184, 249, 249), (190, 249, 241), (196, 249, 233), (203, 249, 225),
+        (209, 249, 217), (216, 249, 209), (222, 249, 201), (229, 249, 193),
+        (235, 250, 185), (242, 250, 177), (248, 250, 168), (255, 250, 160)
+    ]
+
+    rank_embeds = [
+        discord.Embed(
+            title=f"{emoji}  {name}", 
+            description=description, 
+            color=discord.Color.from_rgb(*rank_colors[i])
+        )
+        for i, (emoji, name, description) in enumerate(rank_data)
+    ]
+
+    await interaction.channel.send(embeds=rank_embeds[:10])
+    await interaction.channel.send(embeds=rank_embeds[10:])
+
+    await interaction.followup.send("✅ Rank embeds have been posted.", ephemeral=True)
 
 # ---------------------------
 # 🔹 Say Command
@@ -210,8 +240,8 @@ async def help(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True, thinking=True)
 
     embed = discord.Embed(
-        title="🤖 Reflect Bot Help",
-        description="Here is a list of all the commands you can use. Commands marked with 🔒 are for Staff only.",
+        title="🤖 Obscurity Bot Help",
+        description="Here is a list of all the commands you can use. Commands marked with 🔒 are for Admins only.",
         color=discord.Color.blue()
     )
 
@@ -239,7 +269,7 @@ async def help(interaction: discord.Interaction):
     )
 
     embed.add_field(
-        name="🔒 Staff Commands",
+        name="🔒 Admin Commands",
         value="""
         `/info` - Posts the detailed clan information embeds in the current channel.
         `/rules` - Posts the clan rules embeds in the current channel.
@@ -257,6 +287,87 @@ async def help(interaction: discord.Interaction):
 # ---------------------------
 # 🔹 Tickets
 # ---------------------------
+class ReasonModal(discord.ui.Modal, title="Close Ticket with Reason"):
+    reason = discord.ui.TextInput(
+        label="Reason for closing", 
+        style=discord.TextStyle.paragraph, 
+        required=True,
+        placeholder="e.g., Application accepted, issue resolved..."
+    )
+
+    def __init__(self, thread: discord.Thread, creator: discord.User | discord.Member):
+        super().__init__()
+        self.thread = thread
+        self.creator = creator
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.send_message("Sending reason and closing ticket...", ephemeral=True)
+        try:
+            await self.creator.send(f"Your ticket (**{self.thread.name}**) has been closed.\n**Reason:** {self.reason.value}")
+        except discord.Forbidden:
+            await interaction.channel.send("⚠️ *Could not DM the user the reason (their DMs are closed).*")
+        
+        await self.thread.edit(archived=True, locked=True, reason=f"Closed by {interaction.user.display_name}")
+
+class DelayModal(discord.ui.Modal, title="Delay Ticket Close"):
+    hours = discord.ui.TextInput(
+        label="Hours to delay", 
+        placeholder="e.g., 2 (decimals work too, like 1.5)", 
+        required=True
+    )
+
+    def __init__(self, thread: discord.Thread):
+        super().__init__()
+        self.thread = thread
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            delay_hours = float(self.hours.value)
+        except ValueError:
+            await interaction.response.send_message("❌ Please enter a valid number for hours.", ephemeral=True)
+            return
+        
+        await interaction.response.send_message(f"⏱️ Ticket scheduled to close in **{delay_hours}** hours.", ephemeral=False)
+        
+        async def delayed_close():
+            await asyncio.sleep(delay_hours * 3600)
+            try:
+                await self.thread.edit(archived=True, locked=True, reason="Auto-closed after delay.")
+            except Exception:
+                pass
+
+        asyncio.create_task(delayed_close())
+
+class TicketControlView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    async def get_ticket_creator(self, thread: discord.Thread):
+        async for message in thread.history(limit=5, oldest_first=True):
+            if message.author.bot and message.mentions:
+                return message.mentions[0]
+        return None
+
+    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.danger, custom_id="ctrl_close_btn", emoji="🔒")
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if isinstance(interaction.channel, discord.Thread):
+            await interaction.response.send_message("Locking and archiving ticket...", ephemeral=True)
+            await interaction.channel.edit(archived=True, locked=True, reason=f"Closed by {interaction.user.display_name}")
+
+    @discord.ui.button(label="Delay Close", style=discord.ButtonStyle.secondary, custom_id="ctrl_delay_btn", emoji="⏱️")
+    async def delay_close(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if isinstance(interaction.channel, discord.Thread):
+            await interaction.response.send_modal(DelayModal(interaction.channel))
+
+    @discord.ui.button(label="Close With Reason", style=discord.ButtonStyle.primary, custom_id="ctrl_reason_btn", emoji="📝")
+    async def close_reason(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if isinstance(interaction.channel, discord.Thread):
+            creator = await self.get_ticket_creator(interaction.channel)
+            if not creator:
+                await interaction.response.send_message("❌ Could not identify the original ticket creator.", ephemeral=True)
+                return
+            await interaction.response.send_modal(ReasonModal(interaction.channel, creator))
+
 class WelcomeTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -281,7 +392,7 @@ class WelcomeTicketView(View):
             
             requirements_embed.add_field(
                 name="⏳ Response Time",
-                value="Staff members are in various timezones. Please be patient after opening your ticket.",
+                value="Admins are in various timezones. Please be patient after opening your ticket.",
                 inline=False
             )
 
@@ -362,7 +473,7 @@ async def panel_support(interaction: discord.Interaction):
     
     embed.add_field(
         name="⏳ Response Time",
-        value="Staff members are in various timezones. Please be patient after opening your ticket and provide as much detail as possible.",
+        value="Admins are in various timezones. Please be patient after opening your ticket and provide as much detail as possible.",
         inline=False
     )
 
@@ -457,7 +568,6 @@ async def welcome(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Could not detect who opened this ticket.", ephemeral=True)
         return
 
-    # Update these roles for Reflect
     roles_to_assign = ["Member"] 
     missing_roles = []
     guild = interaction.guild
