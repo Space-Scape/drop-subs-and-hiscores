@@ -174,6 +174,10 @@ async def rules(interaction: discord.Interaction):
     await interaction.followup.send("✅ Rules message has been posted.", ephemeral=True)
 
 
+# ---------------------------
+# 🔹 Rank Command
+# ---------------------------
+
 @bot.tree.command(name="rank", description="Post the clan rank requirements.")
 @app_commands.checks.has_any_role("Administrators")
 async def rank(interaction: discord.Interaction):
@@ -211,9 +215,9 @@ async def rank(interaction: discord.Interaction):
     ]
 
     await interaction.channel.send(embeds=rank_embeds[:10])
-    await interaction.channel.send(embeds=rank_embeds[10:])
+    await interaction.channel.send(embeds=rank_embeds[10:], view=VanityView(interaction.guild))
 
-    await interaction.followup.send("✅ Rank embeds have been posted.", ephemeral=True)
+    await interaction.followup.send("✅ Rank embeds and application buttons have been posted.", ephemeral=True)
 
 # ---------------------------
 # 🔹 Say Command
