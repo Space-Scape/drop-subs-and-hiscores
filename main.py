@@ -297,7 +297,7 @@ class SupportTicketView(View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label="Open Support Ticket", style=discord.ButtonStyle.blurple, custom_id="support_ticket_btn", emoji="🗝️")
-    async def open_support_thread(self, interaction: discord.interaction, button: discord.ui.button):
+    async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.button):
         if isinstance(interaction.channel, discord.TextChannel):
             thread_name = f"Support - {interaction.user.display_name}"
             thread = await interaction.channel.create_thread(
