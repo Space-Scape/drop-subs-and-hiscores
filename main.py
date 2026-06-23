@@ -89,8 +89,7 @@ COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
 
 GUILD_ID = 1517374163655065631
 COLLAT_CHANNEL_ID = 1517385356452958338
-STAFF_ROLE_ID = 1517385637857333358
-ADMINISTRATOR_ROLE_ID = 1517374323889934416
+ADMINISTRATOR_ROLE_ID = 1517751423226613922
 INACTIVE_ROLE_ID = 1517388929655898233
 
 RSN_CHANNEL_ID = 1517389307722076332
@@ -258,11 +257,11 @@ async def help(interaction: discord.Interaction):
 # ---------------------------
 # 🔹 Tickets
 # ---------------------------
-class TicketButtons(View):
+class WelcomeTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="welcome_ticket_btn")
+    @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="welcome_ticket_btn", emoji="👐")
     async def open_welcome_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
         if isinstance(interaction.channel, discord.TextChannel):
             thread_name = f"Welcome - {interaction.user.display_name}"
@@ -272,13 +271,33 @@ class TicketButtons(View):
                 auto_archive_duration=1440
             )
             await thread.add_user(interaction.user)
-            await thread.send("Thanks for your interest in joining! Please send the item/level requirements below and someone will help you.")
+
+            requirements_embed = discord.Embed(
+                title="Clan Requirements",
+                description="Thanks for your interest in joining Obscurity. We're a learner-friendly and all-inclusive clan. Please send the requirements for the clan below so someone can assist you.",
+                color=discord.Color.blurple()
+            )
+            requirements_embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+            
+            requirements_embed.add_field(
+                name="⏳ Response Time",
+                value="Staff members are in various timezones. Please be patient after opening your ticket.",
+                inline=False
+            )
+
+            welcome_message = f"Hello {interaction.user.mention}! A member of the <@&1517751423226613922> team will be right with you to help."
+            
+            await thread.send(content=welcome_message, embed=requirements_embed)
             await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
         else:
             await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
 
-    @discord.ui.button(label="Support", style=discord.ButtonStyle.secondary, custom_id="support_ticket_btn")
-    async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
+class SupportTicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Open Support Ticket", style=discord.ButtonStyle.blurple, custom_id="support_ticket_btn", emoji="🗝️")
+    async def open_support_thread(self, interaction: discord.interaction, button: discord.ui.button):
         if isinstance(interaction.channel, discord.TextChannel):
             thread_name = f"Support - {interaction.user.display_name}"
             thread = await interaction.channel.create_thread(
@@ -287,10 +306,64 @@ class TicketButtons(View):
                 auto_archive_duration=1440
             )
             await thread.add_user(interaction.user)
-            await thread.send(f"Hello {interaction.user.mention}, how can staff help you today?")
-            await interaction.response.send_message(f"Support ticket opened here: {thread.mention}", ephemeral=True)
+
+            await thread.send(f"Hey {interaction.user.mention} - please leave your response below and an admin will help you out shortly.")
+            await interaction.response.send_message(f"Support ticket opened: {thread.mention}", ephemeral=True)
         else:
-            await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
+            await interaction.response.send_message("Support Ticket failed to open - Please contact server admin.")
+    
+@bot.tree.command(name="panel_welcome", description="Post the Welcome ticket panel.")
+@app_commands.checks.has_any_role("Administrators")
+async def panel_welcome(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="✨ Apply to Join Obscurity ✨", 
+        description="We are thrilled that you're interested in joining our community! To start your application process, please click the 'Join' button below.",
+        color=discord.Color.from_rgb(184, 249, 249)
+    )
+    
+    embed.add_field(
+        name="Our Community",
+        value="We uphold a welcoming and positive environment. Those that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.\n We hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.\nThat being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="⚠️ Before You Apply",
+        value="Please ensure you have read the server rules here: .",
+        inline=False
+    )
+    
+    embed.set_footer(text="Obscurity Recruitment • Click the button below to begin")
+    
+    await interaction.response.send_message("Posting Welcome panel...", ephemeral=True)
+    await interaction.channel.send(embed=embed, view=WelcomeTicketView())
+
+@bot.tree.command(name="panel_support", description="Post the Support ticket panel.")
+@app_commands.checks.has_any_role("Administrators")
+async def panel_support(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="🛠️ Staff Support Center", 
+        description="Need assistance from the administration team? Open a private support ticket and we will help you as soon as we are available.",
+        color=discord.Color.from_rgb(43, 45, 49)
+    )
+
+    embed.add_field(
+        name="📌 What can we help with?",
+        value="• **Questions:** General inquiries about the clan or systems.\n• **Reports:** Reporting a player for breaking rules or toxic behavior.\n• **Coffer/Bank:** Issues or questions regarding clan wealth and payouts.\n• **Roles:** Requesting missing roles or name updates.",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="⏳ Response Time",
+        value="Staff members are in various timezones. Please be patient after opening your ticket and provide as much detail as possible.",
+        inline=False
+    )
+
+    embed.set_footer(text="Obscurity Admin Team • Misuse of the ticket system may result in a warning")
+    
+    await interaction.response.send_message("Posting Support panel...", ephemeral=True)
+    await interaction.channel.send(embed=embed, view=SupportTicketView())
+    
 
 # ---------------------------
 # 🔹 Color Panel
@@ -843,20 +916,6 @@ async def setup_panels(interaction: discord.Interaction):
         
     await interaction.followup.send("Panels have been deployed!", ephemeral=True)
 
-@bot.tree.command(name="ticket_panel", description="Post the ticket system panel in the current channel.")
-@app_commands.checks.has_any_role("Administrators")
-async def ticket_panel(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="🎫 Ticket Center", 
-        description="Click a button below to open a ticket.\n\n"
-                    "**Join The Clan:** Open a ticket to apply.\n"
-                    "**Support:** Open a ticket for staff assistance.",
-        color=discord.Color.blurple()
-    )
-    
-    await interaction.response.send_message("Posting ticket panel...", ephemeral=True)
-    await interaction.channel.send(embed=embed, view=TicketButtons())
-
 @bot.tree.command(name="color_panel", description="Post the color role selection panel.")
 @app_commands.checks.has_any_role("Administrators")
 async def post_color_panel(interaction: discord.Interaction) -> None:
@@ -901,7 +960,10 @@ async def on_ready():
 
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
-    bot.add_view(TicketButtons())
+    bot.add_view(WelcomeTicketView())
+    bot.add_view(SupportTicketView())
+    bot.add_view(ColorPanelView())
+    bot.add_view(TimezoneView(bot.get_guild(GUILD_ID)))
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
