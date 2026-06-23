@@ -328,7 +328,7 @@ async def panel_welcome(interaction: discord.Interaction):
     )
     
     embed.add_field(
-        name="Requirements",
+        name="🎒 Requirements",
         value="To join the clan you should be friendly and positive. The main items we'll ask for are basic PvM gear.\n\nYou can use the image below as a rough estimate - though you should have full tribrid gear of *some* kind.",
         inline=False
     )
