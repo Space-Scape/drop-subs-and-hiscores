@@ -332,8 +332,10 @@ async def panel_welcome(interaction: discord.Interaction):
         value="Please ensure you have read the server rules here: https://discord.com/channels/1517374163655065631/1517389459459538994.",
         inline=False
     )
-    
+
+    embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
     embed.set_footer(text="Obscurity Recruitment • Click the button below to begin")
+    
     
     await interaction.response.send_message("Posting Welcome panel...", ephemeral=True)
     await interaction.channel.send(embed=embed, view=WelcomeTicketView())
