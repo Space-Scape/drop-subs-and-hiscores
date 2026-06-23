@@ -323,19 +323,31 @@ async def panel_welcome(interaction: discord.Interaction):
     
     embed.add_field(
         name="👥 Our Community",
-        value="We uphold a welcoming and positive environment. Those that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.\n We hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.\nThat being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.",
+        value="""We uphold a welcoming and positive environment. 
+        
+        Those that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.
+        
+        We hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.
+        
+        That being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.""",
         inline=False
     )
     
+    embed.add_field(
+        name="Requirements",
+        value="""To join the clan you should be friendly and positive. The main items we'll ask for are basic PvM gear. 
+        
+                You can use the image below as a rough estimate - though you should have full tribrid gear of *some* kind."""
+    )
+
     embed.add_field(
         name="⚠️ Before You Apply",
         value="Please ensure you have read the server rules here: https://discord.com/channels/1517374163655065631/1517389459459538994.",
         inline=False
     )
-
-    embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
-    embed.set_footer(text="Obscurity Recruitment • Click the button below to begin")
     
+    embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+    embed.set_footer(text="Join Obscurity • Click the button below to begin")
     
     await interaction.response.send_message("Posting Welcome panel...", ephemeral=True)
     await interaction.channel.send(embed=embed, view=WelcomeTicketView())
