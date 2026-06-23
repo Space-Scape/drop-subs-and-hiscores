@@ -297,7 +297,7 @@ class SupportTicketView(View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label="Open Support Ticket", style=discord.ButtonStyle.blurple, custom_id="support_ticket_btn", emoji="🗝️")
-    async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.button):
+    async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
         if isinstance(interaction.channel, discord.TextChannel):
             thread_name = f"Support - {interaction.user.display_name}"
             thread = await interaction.channel.create_thread(
@@ -310,7 +310,7 @@ class SupportTicketView(View):
             await thread.send(f"Hey {interaction.user.mention} - please leave your response below and an admin will help you out shortly.")
             await interaction.response.send_message(f"Support ticket opened: {thread.mention}", ephemeral=True)
         else:
-            await interaction.response.send_message("Support Ticket failed to open - Please contact server admin.")
+            await interaction.response.send_message("Support Ticket failed to open - Please contact server admin.", ephemeral=True)
     
 @bot.tree.command(name="panel_welcome", description="Post the Welcome ticket panel.")
 @app_commands.checks.has_any_role("Administrators")
@@ -323,21 +323,14 @@ async def panel_welcome(interaction: discord.Interaction):
     
     embed.add_field(
         name="👥 Our Community",
-        value="""We uphold a welcoming and positive environment. 
-        
-        Those that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.
-        
-        We hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.
-        
-        That being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.""",
+        value="We uphold a welcoming and positive environment.\n\nThose that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.\n\nWe hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.\n\nThat being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.",
         inline=False
     )
     
     embed.add_field(
         name="Requirements",
-        value="""To join the clan you should be friendly and positive. The main items we'll ask for are basic PvM gear. 
-        
-                You can use the image below as a rough estimate - though you should have full tribrid gear of *some* kind."""
+        value="To join the clan you should be friendly and positive. The main items we'll ask for are basic PvM gear.\n\nYou can use the image below as a rough estimate - though you should have full tribrid gear of *some* kind.",
+        inline=False
     )
 
     embed.add_field(
