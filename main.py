@@ -93,6 +93,7 @@ GUILD_ID = 1517374163655065631
 COLLAT_CHANNEL_ID = 1517385356452958338
 ADMINISTRATOR_ROLE_ID = 1517751423226613922
 INACTIVE_ROLE_ID = 1517388929655898233
+MEMBER_ROLE_ID = 1517809263739801683
 
 RSN_CHANNEL_ID = 1517389307722076332
 ROLE_CHANNEL_ID = 1517402556651802731
@@ -107,26 +108,104 @@ CST = ZoneInfo("America/Chicago")
 @bot.tree.command(name="info", description="Post general information about the clan.")
 @app_commands.checks.has_any_role("Administrators")
 async def info(interaction: discord.Interaction):
-    """Posts a general information embed for the clan."""
+    """Posts a series of general information embeds for the clan."""
     await interaction.response.defer(ephemeral=True, thinking=True)
 
-    info_embed = discord.Embed(
-        title="Obscurity - Clan Information",
-        description=".",
+    main_embed = discord.Embed(
+        title="✨ Welcome to the land of Obscurity ✨",
+        description="""Nice to see ya! 
+        
+        We are a learner-friendly, all-inclusive OSRS clan. Built on a foundation of a drama-free environment - overly dramatic people will be removed as needed, and stress is kept to a minimum.
+        
+        Racism, sexism, and bigotry = instant kick, no matter who you are. Other clans might look past it, but not ours - find a different one if you have to.
+        
+        Formed by a group of very welcoming individuals with many differences in life, but similar in ideals. 
+
+        Below you will find everything you need to know about how our clan operates.
+
+        **What we offer:**
+        • Raids & Bossing
+        • Mentorship
+        • Friendship
+        • Learner Events
+        • Clan Massing/Wildy Events
+        • Active Voice Chats""",
         color=discord.Color.from_rgb(184, 249, 249)
     )
-    await interaction.channel.send(embed=info_embed)
-    await asyncio.sleep(0.5)
-
-    systems_embed = discord.Embed(
-        title="1️⃣ Clan Systems",
-        description="Edit this description with channel links.",
-        color=discord.Color.from_rgb(217, 216, 216)
+    main_embed.add_field(
+        name="🔗 Important Links",
+        value="• **Discord Invite:** [Click Here](https://discord.gg/5QHjsGPMt)\n• **Wise Old Man:** [Obscurity Page](https://wiseoldman.net/groups/25289)",
+        inline=False
     )
+    #main_embed.set_thumbnail(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+    
+    systems_embed = discord.Embed(
+        title="🗺️ Clan Systems & Channels",
+        description="A quick guide to navigating our server and utilizing our systems.",
+        color=discord.Color.from_rgb(196, 249, 233)
+    )
+    systems_embed.add_field(
+        name="🎟️ Ticket Systems",
+        value="• <#1519007923940884510> - Claim your bossing, skilling, and vanity roles here.\n• <#YOUR_CHANNEL_ID> - Open a support ticket to speak privately with admins.",
+        inline=False
+    )
+    systems_embed.add_field(
+        name="🔔 Collateral & Item Lending",
+        value="Post collat requests in <#1517385356452958338>. You can use the buttons on the message to notify players when an item is requested or returned.",
+        inline=False
+    )
+
+    rank_embed = discord.Embed(
+        title="⚔️ Ranking Structure",
+        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
+        color=discord.Color.from_rgb(216, 249, 209)
+    )
+    rank_embed.add_field(
+        name="🙂 Members & Verified",
+        value="Registering your RSN grants the Verified role. Joining through the https://discord.com/channels/1517374163655065631/1518463838435938304 channel will grant you the member role",
+        inline=False
+    )
+    rank_embed.add_field(
+        name="🪞 Activity & Vanity Ranks",
+        value="Ranks like Zenyte, Maxed, or Raider are obtained through the rank application panel. Check the rank requirements channel for details.",
+        inline=False
+    )
+    rank_embed.add_field(
+        name="📜 Mentors & Event Coordinators",
+        value="These members are trusted to teach raids (ToB/CoX/ToA) or plan and host clan events. Reach out to them if you want to learn!",
+        inline=False
+    )
+    rank_embed.add_field(
+        name="🗝️ Administration",
+        value="Staff structure is all handled at the top-level, with nothing below or higher. Admins handle anything between rule enforcement, ticket resolution, and server maintenance. They can all equally do the same things, but some may know more about certain subjects (i.e., Server support, Clan support, Community support, etc.), which is where a small distinction between admins is drawn. Do not DM them directly; please use the https://discord.com/channels/1517374163655065631/1518463880203079811 channel!",
+        inline=False
+    )
+
+    bots_embed = discord.Embed(
+        title="🤖 Server Bots",
+        description="Euphony - the music bot. Use /play and provide a link in a voice channel text chat or https://discord.com/channels/1517374163655065631/1518576235809214545 \nWise Old Man - used for WoM\nTwistyBot - used for Runewatch lookups and more.",
+        color=discord.Color.from_rgb(235, 250, 185)
+    )
+    bots_embed.add_field(
+        name="👁️ Obscura (Our Custom Bot)",
+        value="Handles our tickets, RSN registration, clan coffer tracking, and role assignments. Type `/help` to see all available commands.",
+        inline=False
+    )
+    bots_embed.add_field(
+        name="🧙‍♂️ Wise Old Man",
+        value="Tracks group EHP, EHB, and bossing records. Drop your achievements in the designated channel!",
+        inline=False
+    )
+
+    await interaction.channel.send(embed=main_embed)
+    await asyncio.sleep(0.5)
     await interaction.channel.send(embed=systems_embed)
     await asyncio.sleep(0.5)
+    await interaction.channel.send(embed=rank_embed)
+    await asyncio.sleep(0.5)
+    await interaction.channel.send(embed=bots_embed)
 
-    await interaction.followup.send("✅ Info message has been posted.", ephemeral=True)
+    await interaction.followup.send("✅ Clan info embeds have been posted.", ephemeral=True)
 
 # ---------------------------
 # 🔹 Rules Command
