@@ -134,7 +134,7 @@ Below you will find everything you need to know about how our clan operates.
     )
     main_embed.add_field(
         name="🔗 Important Links",
-        value="• **Discord Invite:** [Click Here](https://discord.gg/5QHjsGPMt)\n• **Wise Old Man:** [Obscurity Page](https://wiseoldman.net/groups/25289)",
+        value="• **Wise Old Man:** [Obscurity Page](https://wiseoldman.net/groups/25289)",
         inline=False
     )
 
