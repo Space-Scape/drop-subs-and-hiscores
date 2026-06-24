@@ -105,6 +105,10 @@ CST = ZoneInfo("America/Chicago")
 # 🔹 Info Command
 # ---------------------------
 
+# ---------------------------
+# 🔹 Info Command
+# ---------------------------
+
 @bot.tree.command(name="info", description="Post general information about the clan.")
 @app_commands.checks.has_any_role("Administrators")
 async def info(interaction: discord.Interaction):
@@ -115,21 +119,21 @@ async def info(interaction: discord.Interaction):
         title="✨ Welcome to the land of Obscurity ✨",
         description="""Nice to see ya! 
         
-        We are a learner-friendly, all-inclusive OSRS clan. Built on a foundation of a drama-free environment - overly dramatic people will be removed as needed, and stress is kept to a minimum.
+We are a learner-friendly, all-inclusive OSRS clan. Built on a foundation of a drama-free environment - overly dramatic people will be removed as needed, and stress is kept to a minimum.
         
-        Racism, sexism, and bigotry = instant kick, no matter who you are. Other clans might look past it, but not ours - find a different one if you have to.
+Racism, sexism, and bigotry = instant kick, no matter who you are. Other clans might look past it, but not ours - find a different one if you have to.
         
-        Formed by a group of very welcoming individuals with many differences in life, but similar in ideals. 
+Formed by a group of very welcoming individuals with many differences in life, but similar in ideals. 
 
-        Below you will find everything you need to know about how our clan operates.
+Below you will find everything you need to know about how our clan operates.
 
-        **What we offer:**
-        • Raids & Bossing
-        • Mentorship
-        • Friendship
-        • Learner Events
-        • Clan Massing/Wildy Events
-        • Active Voice Chats""",
+**What we offer:**
+• Raids & Bossing
+• Mentorship
+• Friendship
+• Learner Events
+• Clan Massing/Wildy Events
+• Active Voice Chats""",
         color=discord.Color.from_rgb(184, 249, 249)
     )
     main_embed.add_field(
@@ -137,54 +141,49 @@ async def info(interaction: discord.Interaction):
         value="• **Discord Invite:** [Click Here](https://discord.gg/5QHjsGPMt)\n• **Wise Old Man:** [Obscurity Page](https://wiseoldman.net/groups/25289)",
         inline=False
     )
-    #main_embed.set_thumbnail(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
 
-   channels_embed = discord.Embed(
+    channels_embed = discord.Embed(
         title="🪷 Channels",
         description="A breakdown of the different categories and channels in our server.",
         color=discord.Color.from_rgb(196, 249, 233)
     )
-    
     channels_embed.add_field(
         name="📢 【 ANNOUNCEMENTS 】",
         value="""• **#📣announcements** - Official clan news, events, and updates.
-        • **#👤personal-announcements** - Member milestones and personal updates.""",
+• **#👤personal-announcements** - Member milestones and personal updates.""",
         inline=False
     )
-    
     channels_embed.add_field(
         name="🛡️ 【 LANDING SITE 】",
         value="""• **#❗info** - You are here! General clan information.
-        • **#📚rules** - Our clan rules and community guidelines.
-        • **#✌️welcome** - The main entry point for new arrivals.
-        • **#🎯role-select** - Choose your ping preferences and bossing roles.
-        • **#🌸color-select** - Pick a custom color for your Discord name.
-        • **#💡link-rsn-to-join** - Verify your OSRS account here to gain full access.""",
+• **#📚rules** - Our clan rules and community guidelines.
+• **#✌️welcome** - The main entry point for new arrivals.
+• **#🎯role-select** - Choose your ping preferences and bossing roles.
+• **#🌸color-select** - Pick a custom color for your Discord name.
+• **#💡link-rsn-to-join** - Verify your OSRS account here to gain full access.""",
         inline=False
     )
-    
     channels_embed.add_field(
         name="💜 【 SUPPORT 】",
         value="""• **#👐join** - Open a ticket to officially join the clan.
-        • **#⚔️ranks** - Apply for vanity, activity, and god alignment ranks.
-        • **#✉️contact** - Open a private ticket to speak with the admin team.""",
+• **#⚔️ranks** - Apply for vanity, activity, and god alignment ranks.
+• **#✉️contact** - Open a private ticket to speak with the admin team.""",
         inline=False
     )
-    
     channels_embed.add_field(
         name="😀 【 CHAT 】",
         value="""• **#☮️general** - Hang out and chat about anything.
-        • **#⚔️grouping** - Find teams for raids, bosses, and minigames.
-        • **#👁️clan-chat** - Bridge connecting to our in-game clan chat.
-        • **#🤝collats** - Request and track collateral for item lending.
-        • **#😭memes** - Share your favorite OSRS and general memes.
-        • **#⭐drops-achievements** - Flex your new pets, purples, and 99s!""",
+• **#⚔️grouping** - Find teams for raids, bosses, and minigames.
+• **#👁️clan-chat** - Bridge connecting to our in-game clan chat.
+• **#🤝collats** - Request and track collateral for item lending.
+• **#😭memes** - Share your favorite OSRS and general memes.
+• **#⭐drops-achievements** - Flex your new pets, purples, and 99s!""",
         inline=False
     )
-    
+
     systems_embed = discord.Embed(
         title="🗺️ Clan Systems",
-        description="A more in-depth guide to navigating our server and utilizing our systems.",
+        description="A quick guide to navigating our server and utilizing our systems.",
         color=discord.Color.from_rgb(196, 249, 233)
     )
     systems_embed.add_field(
@@ -200,7 +199,7 @@ async def info(interaction: discord.Interaction):
 
     rank_embed = discord.Embed(
         title="⚔️ Ranking Structure",
-        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. See  The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
+        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
         color=discord.Color.from_rgb(216, 249, 209)
     )
     rank_embed.add_field(
@@ -210,7 +209,7 @@ async def info(interaction: discord.Interaction):
     )
     rank_embed.add_field(
         name="🪞 Activity & Vanity Ranks",
-        value="Ranks like Zenyte and Maxed are obtained through the rank application panel. Check the  channel for details.",
+        value="Ranks like Zenyte and Maxed are obtained through the rank application panel. Check the channel for details.",
         inline=False
     )
     rank_embed.add_field(
