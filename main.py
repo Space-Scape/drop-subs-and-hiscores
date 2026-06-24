@@ -138,26 +138,69 @@ async def info(interaction: discord.Interaction):
         inline=False
     )
     #main_embed.set_thumbnail(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+
+   channels_embed = discord.Embed(
+        title="🪷 Channels",
+        description="A breakdown of the different categories and channels in our server.",
+        color=discord.Color.from_rgb(196, 249, 233)
+    )
+    
+    channels_embed.add_field(
+        name="📢 【 ANNOUNCEMENTS 】",
+        value="""• **#📣announcements** - Official clan news, events, and updates.
+        • **#👤personal-announcements** - Member milestones and personal updates.""",
+        inline=False
+    )
+    
+    channels_embed.add_field(
+        name="🛡️ 【 LANDING SITE 】",
+        value="""• **#❗info** - You are here! General clan information.
+        • **#📚rules** - Our clan rules and community guidelines.
+        • **#✌️welcome** - The main entry point for new arrivals.
+        • **#🎯role-select** - Choose your ping preferences and bossing roles.
+        • **#🌸color-select** - Pick a custom color for your Discord name.
+        • **#💡link-rsn-to-join** - Verify your OSRS account here to gain full access.""",
+        inline=False
+    )
+    
+    channels_embed.add_field(
+        name="💜 【 SUPPORT 】",
+        value="""• **#👐join** - Open a ticket to officially join the clan.
+        • **#⚔️ranks** - Apply for vanity, activity, and god alignment ranks.
+        • **#✉️contact** - Open a private ticket to speak with the admin team.""",
+        inline=False
+    )
+    
+    channels_embed.add_field(
+        name="😀 【 CHAT 】",
+        value="""• **#☮️general** - Hang out and chat about anything.
+        • **#⚔️grouping** - Find teams for raids, bosses, and minigames.
+        • **#👁️clan-chat** - Bridge connecting to our in-game clan chat.
+        • **#🤝collats** - Request and track collateral for item lending.
+        • **#😭memes** - Share your favorite OSRS and general memes.
+        • **#⭐drops-achievements** - Flex your new pets, purples, and 99s!""",
+        inline=False
+    )
     
     systems_embed = discord.Embed(
-        title="🗺️ Clan Systems & Channels",
-        description="A quick guide to navigating our server and utilizing our systems.",
+        title="🗺️ Clan Systems",
+        description="A more in-depth guide to navigating our server and utilizing our systems.",
         color=discord.Color.from_rgb(196, 249, 233)
     )
     systems_embed.add_field(
-        name="🎟️ Ticket Systems",
-        value="• <#1519007923940884510> - Claim your bossing, skilling, and vanity roles here.\n• <#YOUR_CHANNEL_ID> - Open a support ticket to speak privately with admins.",
+        name="🎟️ Role and Ticket Systems",
+        value="• https://discord.com/channels/1517374163655065631/1517402556651802731 - Claim your bossing roles here.\n• https://discord.com/channels/1517374163655065631/1518463880203079811 - Open a support ticket to speak privately with admins.\n• https://discord.com/channels/1517374163655065631/1518570261161447515 Change the color of your name!\n• https://discord.com/channels/1517374163655065631/1519007923940884510 Add in-game vanity roles!",
         inline=False
     )
     systems_embed.add_field(
         name="🔔 Collateral & Item Lending",
-        value="Post collat requests in <#1517385356452958338>. You can use the buttons on the message to notify players when an item is requested or returned.",
+        value="Post collat requests in https://discord.com/channels/1517374163655065631/1517385356452958338. Paste an image and @mention a user in your post to summon the **Collat Notifier**. You can use the buttons on the message to notify players when an item is requested or returned.",
         inline=False
     )
 
     rank_embed = discord.Embed(
         title="⚔️ Ranking Structure",
-        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
+        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. See  The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
         color=discord.Color.from_rgb(216, 249, 209)
     )
     rank_embed.add_field(
@@ -167,7 +210,7 @@ async def info(interaction: discord.Interaction):
     )
     rank_embed.add_field(
         name="🪞 Activity & Vanity Ranks",
-        value="Ranks like Zenyte, Maxed, or Raider are obtained through the rank application panel. Check the rank requirements channel for details.",
+        value="Ranks like Zenyte and Maxed are obtained through the rank application panel. Check the  channel for details.",
         inline=False
     )
     rank_embed.add_field(
@@ -183,7 +226,7 @@ async def info(interaction: discord.Interaction):
 
     bots_embed = discord.Embed(
         title="🤖 Server Bots",
-        description="Euphony - the music bot. Use /play and provide a link in a voice channel text chat or https://discord.com/channels/1517374163655065631/1518576235809214545 \nWise Old Man - used for WoM\nTwistyBot - used for Runewatch lookups and more.",
+        description="🎵Euphony - the music bot. Use /play and provide a link in a voice channel text chat or https://discord.com/channels/1517374163655065631/1518576235809214545.",
         color=discord.Color.from_rgb(235, 250, 185)
     )
     bots_embed.add_field(
@@ -193,11 +236,13 @@ async def info(interaction: discord.Interaction):
     )
     bots_embed.add_field(
         name="🧙‍♂️ Wise Old Man",
-        value="Tracks group EHP, EHB, and bossing records. Drop your achievements in the designated channel!",
+        value="Tracks group EHP, EHB, and bossing records.",
         inline=False
     )
 
     await interaction.channel.send(embed=main_embed)
+    await asyncio.sleep(0.5)
+    await interaction.channel.send(embed=channels_embed)
     await asyncio.sleep(0.5)
     await interaction.channel.send(embed=systems_embed)
     await asyncio.sleep(0.5)
