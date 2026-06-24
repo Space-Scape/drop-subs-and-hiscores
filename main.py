@@ -85,7 +85,7 @@ tree = bot.tree
 COLOR_ROLES_CONFIG = [
     ("Snow", "⚪"), ("Onyx", "⚫"), ("Rose", "🪷"), 
     ("Dragon", "🔴"), ("Duck", "🟡"), ("Pumpkin", "🎃"), 
-    ("Voidwaker", "🟣"), ("Grey Bear", "⚪"), ("Lake", "💧")
+    ("Voidwaker", "🟣"), ("Grey", "⚪"), ("Lake", "💧"), ("Grass", "🟢")
 ]
 COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
 
