@@ -105,10 +105,6 @@ CST = ZoneInfo("America/Chicago")
 # 🔹 Info Command
 # ---------------------------
 
-# ---------------------------
-# 🔹 Info Command
-# ---------------------------
-
 @bot.tree.command(name="info", description="Post general information about the clan.")
 @app_commands.checks.has_any_role("Administrators")
 async def info(interaction: discord.Interaction):
@@ -117,11 +113,11 @@ async def info(interaction: discord.Interaction):
 
     main_embed = discord.Embed(
         title="✨ Welcome to the land of Obscurity ✨",
-        description="""Nice to see ya! 
+        description="""**Nice to see ya!** 
         
 We are a learner-friendly, all-inclusive OSRS clan. Built on a foundation of a drama-free environment - overly dramatic people will be removed as needed, and stress is kept to a minimum.
         
-Racism, sexism, and bigotry = instant kick, no matter who you are. Other clans might look past it, but not ours - find a different one if you have to.
+Racism, sexism, and bigotry = *instant kick*, no matter who you are. Other clans might look past it, but not ours - find a different one if you have to.
         
 Formed by a group of very welcoming individuals with many differences in life, but similar in ideals. 
 
@@ -144,7 +140,7 @@ Below you will find everything you need to know about how our clan operates.
 
     channels_embed = discord.Embed(
         title="🪷 Channels",
-        description="A breakdown of the different categories and channels in our server.",
+        description="> A breakdown of the different categories and channels in our server.",
         color=discord.Color.from_rgb(196, 249, 233)
     )
     channels_embed.add_field(
@@ -183,7 +179,7 @@ Below you will find everything you need to know about how our clan operates.
 
     systems_embed = discord.Embed(
         title="🗺️ Clan Systems",
-        description="A quick guide to navigating our server and utilizing our systems.",
+        description="> A quick guide to navigating our server and utilizing our systems.",
         color=discord.Color.from_rgb(196, 249, 233)
     )
     systems_embed.add_field(
@@ -199,7 +195,7 @@ Below you will find everything you need to know about how our clan operates.
 
     rank_embed = discord.Embed(
         title="⚔️ Ranking Structure",
-        description="Many of the ranks are purely vanity, from raid-specific roles to god alignments. The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
+        description="> Many of the ranks are purely vanity, from raid-specific roles to god alignments. The Zenyte and Maxxed roles need applying for, with full-client screenshots of the required items.",
         color=discord.Color.from_rgb(216, 249, 209)
     )
     rank_embed.add_field(
@@ -225,7 +221,7 @@ Below you will find everything you need to know about how our clan operates.
 
     bots_embed = discord.Embed(
         title="🤖 Server Bots",
-        description="🎵Euphony - the music bot. Use /play and provide a link in a voice channel text chat or https://discord.com/channels/1517374163655065631/1518576235809214545.",
+        description="🎵 **Euphony - the music bot**\nUse /play and provide a link in a voice channel text chat or https://discord.com/channels/1517374163655065631/1518576235809214545.",
         color=discord.Color.from_rgb(235, 250, 185)
     )
     bots_embed.add_field(
