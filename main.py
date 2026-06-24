@@ -272,7 +272,7 @@ async def rules(interaction: discord.Interaction):
          "Macroing, Real World Trading (RWT), Solicitation, and Hate Speech (slurs, racist jokes, attacks on religions, nationalities, or identities) are actions that will result in an instant, unappealable ban. Ignorance of Jagex or Discord ToS is not an excuse; it's mostly common sense. Just don't do it or find another clan."),
         ("No Scamming, Luring, or Begging", 
          "Scammers and lurers will be instantly banned and submitted to RuneWatch. Begging is prohibited and will result in a warning."),
-        ("Mandatory Loot Splitting", 
+        ("Mandatory Loot Splitting Unless FFA", 
          "All uniques obtained in group content are considered to be split, and it should be stated that you are FFA before starting. This also applies to Ironmen and FFA worlds. Saying you can not split late into a raid or PvM trip is treated as scamming."),
         ("Approved Clients Only", 
          "Using cheat plug-ins or unofficial, unapproved clients is strictly prohibited. Cheaters will be removed if proof is provided."),
