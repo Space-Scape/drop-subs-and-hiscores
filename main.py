@@ -432,7 +432,7 @@ class VanityView(View):
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         
         self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
-        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed")))
+        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) 
         
         self.add_item(RoleButton("Zamorak", get_emoji("zammy")))
         self.add_item(RoleButton("Saradomin", get_emoji("sara")))
@@ -441,6 +441,7 @@ class VanityView(View):
         self.add_item(RoleButton("Seren", get_emoji("seren")))
         self.add_item(RoleButton("Zaros", get_emoji("zaros")))
         self.add_item(RoleButton("Guthixian", get_emoji("guthix")))
+
         self.add_item(RoleButton("Bloodlust", get_emoji("bloodlust")))
         self.add_item(RoleButton("Chamber Explorer", get_emoji("chamberexplorer")))
         self.add_item(RoleButton("Tomb Raider", get_emoji("tombraider")))
@@ -1111,16 +1112,63 @@ async def setup_panels(interaction: discord.Interaction):
         await send_combined_panels(combined_channel)
 
     if vanity_channel := bot.get_channel(VANITY_CHANNEL_ID):
-        await vanity_channel.purge(limit=10)
-        embed = discord.Embed(
+        await vanity_channel.purge(limit=20)
+        
+        # Generate the full list of info embeds
+        rank_data = [
+            ("<:zenyte:1519040363686527187>", "Zenyte", "This role requires a dragon warhammer, BGS, or elder maul and should be applied for."),
+            ("<:bloodlust:1519037132704841738>", "ToB Rank", "Take this rank if your favorite raid is ToB"),
+            ("<:xerician:1519039860269121796>", "CoX Rank", "Take this rank if your favorite raid is CoX"),
+            ("<:tombraider:1519040232148697191>", "ToA Rank", "Take this rank if your favorite raid is ToA"),
+            ("<:raider:1519037265878319317>", "Raider Rank", "Take this rank if you just like to raid"),
+            ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*"),
+            ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling"),
+            ("<:tob_mentor:1519039992398217257>", "ToB Mentor", "ToB mentors will have this rank"),
+            ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
+            ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
+            ("<:pvp:1519037569076039701>", "Pker", "Take this if you like to do PvP"),
+            ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan"),
+            ("<:zammy:1519259451096567838>", "Zamorak", "Take this rank if you align with Zamorak."),
+            ("<:sara:1519259236805382206>", "Saradomin", "Take this rank if you align with Saradomin."),
+            ("<:bandos:1519259058668966018>", "Bandos", "Take this rank if you align with Bandos."),
+            ("<:arma:1519259007443800064>", "Armadyl", "Take this rank if you align with Armadyl."),
+            ("<:seren:1519259305658814474>", "Seren", "Take this rank if you align with Seren."),
+            ("<:zaros:1519259381378711673>", "Zaros", "Take this rank if you align with Zaros."),
+            ("<:guthix:1519259163279097936>", "Guthixian", "Take this rank if you align with Guthix.")
+        ]
+
+        rank_colors = [
+            (184, 249, 249), (190, 249, 241), (196, 249, 233), (203, 249, 225),
+            (209, 249, 217), (216, 249, 209), (222, 249, 201), (229, 249, 193),
+            (235, 250, 185), (242, 250, 177), (248, 250, 168), (255, 250, 160),
+            (255, 235, 150), (255, 220, 140), (255, 205, 130), (255, 190, 120),
+            (255, 175, 110), (255, 160, 100), (255, 145, 90)
+        ]
+
+        rank_embeds = [
+            discord.Embed(
+                title=f"{emoji}  {name}", 
+                description=description, 
+                color=discord.Color.from_rgb(*rank_colors[i])
+            )
+            for i, (emoji, name, description) in enumerate(rank_data)
+        ]
+
+        # Discord only allows 10 embeds per message. Send the first 10 first.
+        await vanity_channel.send(embeds=rank_embeds[:10])
+
+        # Attach the header text to explain the buttons at the very bottom
+        header_embed = discord.Embed(
             title="⚔️ Apply for Ranks",
-            description="Click a button below to open a ticket and submit proof for a specific rank.",
+            description="Click a button below to open a ticket and submit proof for a specific rank, or instantly toggle non-ticket roles.",
             color=discord.Color.from_rgb(184, 249, 249)
         )
-        await vanity_channel.send(embed=embed, view=VanityView(interaction.guild))
+        
+        # Combine the remaining 9 embeds + the header + the buttons
+        final_embeds = rank_embeds[10:] + [header_embed]
+        await vanity_channel.send(embeds=final_embeds, view=VanityView(interaction.guild))
         
     await interaction.followup.send("Panels have been deployed!", ephemeral=True)
-
 @bot.tree.command(name="color_panel", description="Post the color role selection panel.")
 @app_commands.checks.has_any_role("Administrators")
 async def post_color_panel(interaction: discord.Interaction) -> None:
