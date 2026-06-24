@@ -461,8 +461,9 @@ class WelcomeTicketView(View):
 
             welcome_message = f"Hello {interaction.user.mention}! A member of the <@&1517751423226613922> team will be right with you to help."
             
-            await thread.send(content=welcome_message, embed=requirements_embed)
+            await thread.send(content=welcome_message, embed=requirements_embed, view=TicketControlView())
             await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
+            
         else:
             await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
 
@@ -758,9 +759,9 @@ class RSNModal(discord.ui.Modal, title="Register RSN"):
             await rsn_write_queue.put((interaction.user, str(self.rsn)))
             await interaction.followup.send(f"✅ Your RSN **{self.rsn}** has been submitted!", ephemeral=True)
             
-            registered_role = discord.utils.get(interaction.guild.roles, name="Registered")
-            if registered_role and registered_role not in interaction.user.roles:
-                await interaction.user.add_roles(registered_role)
+            verified_role = discord.utils.get(interaction.guild.roles, name="Verified")
+            if verified_role and verified_role not in interaction.user.roles:
+                await interaction.user.add_roles(verified_role)
 
             try:
                 await interaction.user.edit(nick=str(self.rsn))
@@ -1146,6 +1147,9 @@ async def on_ready():
             has_synced = True
         except Exception as e:
             print(f"❌ Command sync failed: {e}")
+
+    # 🔹 Add this line so your ticket control buttons survive bot restarts
+    bot.add_view(TicketControlView())
 
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
