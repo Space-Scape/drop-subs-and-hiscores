@@ -196,13 +196,23 @@ async def rank(interaction: discord.Interaction):
         ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
         ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
         ("<:pvp:1519037569076039701>", "Pker", "Take this if you like to do PvP"),
-        ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan")
+        ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan"),
+        ("<:zammy:1519259451096567838>", "Zamorak", "Take this rank if you align with Zamorak."),
+        ("<:sara:1519259236805382206>", "Saradomin", "Take this rank if you align with Saradomin."),
+        ("<:bandos:1519259058668966018>", "Bandos", "Take this rank if you align with Bandos."),
+        ("<:arma:1519259007443800064>", "Armadyl", "Take this rank if you align with Armadyl."),
+        ("<:seren:1519259305658814474>", "Seren", "Take this rank if you align with Seren."),
+        ("<:zaros:1519259381378711673>", "Zaros", "Take this rank if you align with Zaros."),
+        ("<:guthix:1519259163279097936>", "Guthixian", "Take this rank if you align with Guthix.")
     ]
 
     rank_colors = [
         (184, 249, 249), (190, 249, 241), (196, 249, 233), (203, 249, 225),
         (209, 249, 217), (216, 249, 209), (222, 249, 201), (229, 249, 193),
-        (235, 250, 185), (242, 250, 177), (248, 250, 168), (255, 250, 160)
+        (235, 250, 185), (242, 250, 177), (248, 250, 168), (255, 250, 160),
+        # 🔹 7 New Colors for the new embeds 🔹
+        (255, 235, 150), (255, 220, 140), (255, 205, 130), (255, 190, 120),
+        (255, 175, 110), (255, 160, 100), (255, 145, 90)
     ]
 
     rank_embeds = [
@@ -422,8 +432,15 @@ class VanityView(View):
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         
         self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
-        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) # Assuming Maxed needs proof since it wasn't excluded!
+        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed")))
         
+        self.add_item(RoleButton("Zamorak", get_emoji("zammy")))
+        self.add_item(RoleButton("Saradomin", get_emoji("sara")))
+        self.add_item(RoleButton("Bandos", get_emoji("bandos")))
+        self.add_item(RoleButton("Armadyl", get_emoji("arma")))
+        self.add_item(RoleButton("Seren", get_emoji("seren")))
+        self.add_item(RoleButton("Zaros", get_emoji("zaros")))
+        self.add_item(RoleButton("Guthixian", get_emoji("guthix")))
         self.add_item(RoleButton("Bloodlust", get_emoji("bloodlust")))
         self.add_item(RoleButton("Chamber Explorer", get_emoji("chamberexplorer")))
         self.add_item(RoleButton("Tomb Raider", get_emoji("tombraider")))
@@ -687,7 +704,6 @@ class RaidsView(View):
     def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
-
         self.add_item(RoleButton("Theatre of Blood", get_emoji("tob")))
         self.add_item(RoleButton("Chambers of Xeric", get_emoji("cox")))
         self.add_item(RoleButton("Tombs of Amascut", get_emoji("toa")))
@@ -699,7 +715,6 @@ class BossesView(View):
     def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
-
         self.add_item(RoleButton("Bandos GWD", get_emoji("graardor")))
         self.add_item(RoleButton("Saradomin GWD", get_emoji("sara")))
         self.add_item(RoleButton("Zamorak GWD", get_emoji("zammy")))
