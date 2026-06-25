@@ -608,6 +608,10 @@ class SupportTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    class SupportTicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
     @discord.ui.button(label="Open Support Ticket", style=discord.ButtonStyle.blurple, custom_id="support_ticket_btn", emoji="🗝️")
     async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
         if isinstance(interaction.channel, discord.TextChannel):
@@ -619,7 +623,10 @@ class SupportTicketView(View):
             )
             await thread.add_user(interaction.user)
 
-            await thread.send(content=f"Hey {interaction.user.mention} - please leave your response below and (<@&{ADMINISTRATION_ROLE_ID}>) will help you out shortly.", view=TicketControlView())
+            await thread.send(
+                content=f"Hey {interaction.user.mention} - please leave your response below and an admin (<@&{ADMINISTRATOR_ROLE_ID}>) will help you out shortly.", 
+                view=TicketControlView()
+            )
             await interaction.response.send_message(f"Support ticket opened: {thread.mention}", ephemeral=True)
         else:
             await interaction.response.send_message("Support Ticket failed to open - Please contact server admin.", ephemeral=True)
