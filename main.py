@@ -877,7 +877,7 @@ async def rsn_writer():
                 rsn_sheet.update_cell(cell.row, 5, timestamp)
             else:
                 rsn_sheet.append_row([
-                    member.display_name,
+                    member.name,
                     str(member.id),
                     "",
                     rsn_value,
@@ -1045,39 +1045,58 @@ def format_million(amount: int) -> str:
         return f"{int(millions):,}M"
     return f"{millions:,.2f}M".rstrip('0').rstrip('.')
 
-def log_coffer_entry(name: str, amount: int, entry_type: str, coffer_change: int = 0, owed_total: int = 0):
-    timestamp = datetime.now().strftime("%I:%M%p %m/%d/%Y").lstrip("0").replace(" 0", " ")
-
+def log_coffer_entry(discord_id: int, discord_name: str, action: str, amount_changed: int, coffer_total: int, holding: int, owed: int):
+    timestamp = datetime.now(CST).strftime("%I:%M%p %m/%d/%Y").lstrip("0").replace(" 0", " ")
+    
+    # This matches the exact 8 columns in your image
     row = [
         timestamp,
         action,
         str(discord_id),
+        discord_name,
         amount_changed,
         coffer_total,
         holding,
         owed
     ]
-    
     coffer_sheet.append_row(row)
 
-#def get_current_total_and_holders_and_owed():
-#    records = coffer_sheet.get_all_records()
-#    total = 0
-#    holders = {}
-#    owed = {}
-#
-#    for i in records:
-#        name = str(r.get("Discord Name", i.get("Name", "")))
-#        action = str(i.get("Action", r.get("Type", ""))).lower()
-#
-#        try:
-#            amount = int(i.get("Amount Changed", i.get("Amount", 0)))
-#        except ValueError:
+def get_current_total_and_holders_and_owed():
+    try:
+        records = coffer_sheet.get_all_records()
+    except Exception:
+        return 0, {}, {}
         
+    total = 0
+    holders = {}
+    owed = {}
     
-    
+    for r in records:
+        # Rebuild the totals based on the history in the sheet
+        name = str(r.get("Discord Name", ""))
+        if not name:
+            continue
+            
+        # The sheet tracks the latest holding/owed for the user on their row
+        if r.get("Holding", "") != "":
+            try:
+                holders[name] = int(str(r["Holding"]).replace(",", ""))
+            except ValueError:
+                pass
+                
+        if r.get("Owed", "") != "":
+            try:
+                owed[name] = int(str(r["Owed"]).replace(",", ""))
+            except ValueError:
+                pass
 
-#    return total, {k: v for k, v in inferred_holders.items() if v > 0}, {k: v for k, v in inferred_owed.items() if v > 0}
+        if r.get("Coffer Total", "") != "":
+            try:
+                total = int(str(r["Coffer Total"]).replace(",", ""))
+            except ValueError:
+                pass
+
+    return total, {k: v for k, v in holders.items() if v > 0}, {k: v for k, v in owed.items() if v > 0}
 
 class DepositWithdrawModal(Modal, title="Deposit/Withdraw"):
     amount_input = TextInput(label="Amount", placeholder="Enter amount (e.g. 20m)", required=True)
@@ -1093,16 +1112,24 @@ class DepositWithdrawModal(Modal, title="Deposit/Withdraw"):
             await interaction.response.send_message("❌ Invalid format.", ephemeral=True)
             return
 
-        name = interaction.user.display_name
+        # Changed to user.name to use their actual Discord name instead of nickname
+        name = interaction.user.name
+        user_id = interaction.user.id
         total, holders, owed = get_current_total_and_holders_and_owed()
         
+        current_holding = holders.get(name, 0)
+        current_owed = owed.get(name, 0)
+        
         if self.action == "Deposit":
-            log_coffer_entry(name, amount, "deposit", amount)
-            current_holding = holders.get(name, 0)
-            log_coffer_entry(name, max(current_holding - amount, 0), "holding", 0)
+            new_coffer = total + amount
+            new_holding = max(current_holding - amount, 0)
+            
+            log_coffer_entry(user_id, name, "Deposit", amount, new_coffer, new_holding, current_owed)
             await interaction.response.send_message(f"{CURRENCY_SYMBOL} {name} deposited {format_million(amount)}!")
         else:
-            log_coffer_entry(name, amount, "withdraw", -amount)
+            new_coffer = total - amount
+            
+            log_coffer_entry(user_id, name, "Withdraw", -amount, new_coffer, current_holding, current_owed)
             await interaction.response.send_message(f"{CURRENCY_SYMBOL} {name} withdrew {format_million(amount)}!")
 
 @bot.tree.command(name="deposit", description="Deposit money into the clan coffer")
@@ -1122,11 +1149,12 @@ async def holding(interaction: discord.Interaction, amount: str, user: discord.U
         await interaction.response.send_message("❌ Invalid format.", ephemeral=True)
         return
 
-    _, holders, _ = get_current_total_and_holders_and_owed()
-    new_amt = holders.get(target.display_name, 0) + amt
+    total, holders, owed = get_current_total_and_holders_and_owed()
+    new_holding = holders.get(target.name, 0) + amt
+    current_owed = owed.get(target.name, 0)
 
-    log_coffer_entry(target.display_name, new_amt if new_amt > 0 else 0, "holding", amt if new_amt > 0 else -holders.get(target.display_name, 0))
-    await interaction.response.send_message(f"{CURRENCY_SYMBOL} **{target.display_name}** holding updated.")
+    log_coffer_entry(target.id, target.name, "Holding Update", amt, total, new_holding, current_owed)
+    await interaction.response.send_message(f"{CURRENCY_SYMBOL} **{target.name}** holding updated.")
 
 @bot.tree.command(name="owed", description="Set a user's owed amount")
 async def owed(interaction: discord.Interaction, amount: str, user: discord.User | None = None):
@@ -1137,21 +1165,28 @@ async def owed(interaction: discord.Interaction, amount: str, user: discord.User
         await interaction.response.send_message("❌ Invalid format.", ephemeral=True)
         return
 
-    _, _, owed = get_current_total_and_holders_and_owed()
-    new_total = owed.get(target.display_name, 0) + amt
+    total, holders, owed_dict = get_current_total_and_holders_and_owed()
+    new_owed = owed_dict.get(target.name, 0) + amt
+    current_holding = holders.get(target.name, 0)
 
-    log_coffer_entry(target.display_name, amt if amt > 0 else 0, "owed", 0, new_total if amt > 0 else 0)
-    await interaction.response.send_message(f"{CURRENCY_SYMBOL} **{target.display_name}** owed amount updated.")
+    log_coffer_entry(target.id, target.name, "Owed Update", amt, total, current_holding, new_owed)
+    await interaction.response.send_message(f"{CURRENCY_SYMBOL} **{target.name}** owed amount updated.")
 
 @bot.tree.command(name="clear_owed", description="Clear owed amount for a user")
 async def clear_owed(interaction: discord.Interaction, user: discord.User):
-    log_coffer_entry(user.display_name, 0, "owed", 0, 0)
-    await interaction.response.send_message(f"{CURRENCY_SYMBOL} Cleared owed amount for **{user.display_name}**.")
+    total, holders, owed_dict = get_current_total_and_holders_and_owed()
+    current_holding = holders.get(user.name, 0)
+    
+    log_coffer_entry(user.id, user.name, "Clear Owed", 0, total, current_holding, 0)
+    await interaction.response.send_message(f"{CURRENCY_SYMBOL} Cleared owed amount for **{user.name}**.")
 
 @bot.tree.command(name="clear_holding", description="Clear holding amount for a user")
 async def clear_holding(interaction: discord.Interaction, user: discord.User):
-    log_coffer_entry(user.display_name, 0, "holding", 0)
-    await interaction.response.send_message(f"{CURRENCY_SYMBOL} Cleared holding for **{user.display_name}**.")
+    total, holders, owed_dict = get_current_total_and_holders_and_owed()
+    current_owed = owed_dict.get(user.name, 0)
+
+    log_coffer_entry(user.id, user.name, "Clear Holding", 0, total, 0, current_owed)
+    await interaction.response.send_message(f"{CURRENCY_SYMBOL} Cleared holding for **{user.name}**.")
 
 @bot.tree.command(name="bank", description="Show coffer total and who is holding or owed money")
 async def bank(interaction: discord.Interaction):
