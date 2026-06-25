@@ -1044,16 +1044,37 @@ def format_million(amount: int) -> str:
 
 def log_coffer_entry(name: str, amount: int, entry_type: str, coffer_change: int = 0, owed_total: int = 0):
     timestamp = datetime.now().strftime("%I:%M%p %m/%d/%Y").lstrip("0").replace(" 0", " ")
-    coffer_sheet.append_row([name, amount, entry_type, f"{'+' if coffer_change >= 0 else ''}{coffer_change}", owed_total, timestamp])
 
-def get_current_total_and_holders_and_owed():
-    records = coffer_sheet.get_all_records()
-    total = sum(int(r.get("Amount", 0)) if r.get("Type", "").lower() == "deposit" else -int(r.get("Amount", 0)) for r in records if r.get("Type", "").lower() in ["deposit", "withdraw"])
+    row = [
+        timestamp,
+        action,
+        str(discord_id),
+        amount_changed,
+        coffer_total,
+        holding,
+        owed
+    ]
     
-    inferred_holders = {r.get("Name"): int(r.get("Amount", 0)) for r in records if r.get("Type", "").lower() == "holding"}
-    inferred_owed = {r.get("Name"): int(r.get("Owed Total", r.get("Amount", 0))) for r in records if r.get("Type", "").lower() == "owed"}
+    coffer_sheet.append_row(row)
 
-    return total, {k: v for k, v in inferred_holders.items() if v > 0}, {k: v for k, v in inferred_owed.items() if v > 0}
+#def get_current_total_and_holders_and_owed():
+#    records = coffer_sheet.get_all_records()
+#    total = 0
+#    holders = {}
+#    owed = {}
+#
+#    for i in records:
+#        name = str(r.get("Discord Name", i.get("Name", "")))
+#        action = str(i.get("Action", r.get("Type", ""))).lower()
+#
+#        try:
+#            amount = int(i.get("Amount Changed", i.get("Amount", 0)))
+#        except ValueError:
+        
+    
+    
+
+#    return total, {k: v for k, v in inferred_holders.items() if v > 0}, {k: v for k, v in inferred_owed.items() if v > 0}
 
 class DepositWithdrawModal(Modal, title="Deposit/Withdraw"):
     amount_input = TextInput(label="Amount", placeholder="Enter amount (e.g. 20m)", required=True)
