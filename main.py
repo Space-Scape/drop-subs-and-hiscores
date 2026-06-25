@@ -608,10 +608,6 @@ class SupportTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    class SupportTicketView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
     @discord.ui.button(label="Open Support Ticket", style=discord.ButtonStyle.blurple, custom_id="support_ticket_btn", emoji="🗝️")
     async def open_support_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
         if isinstance(interaction.channel, discord.TextChannel):
