@@ -945,7 +945,7 @@ TIMEZONE_DATA = {
     "CST": ("America/Chicago", "🇺🇸"),
     "EST": ("America/New_York", "🇺🇸"),
     "GMT": ("Europe/London", "🇬🇧"),
-    "CET": ("Europe/Paris", "🇫🇷"),
+    "CET": ("Europe/Belgium", "🇧🇪"),
     "AEST": ("Australia/Sydney", "🇦🇺"),
 }
 
