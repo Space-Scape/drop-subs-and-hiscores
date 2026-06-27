@@ -1414,6 +1414,15 @@ async def on_ready():
         
 async def main():
     async with bot:
+        cogs_to_load = ["Obscurity"]
+        for cog_name in cogs_to_load:
+            try:
+                await bot.load_extension(cog_name)
+                print(f"✅ Successfully loaded extension: {cog_name}")
+            except Exception as e:
+                print(f"🔥 Failed to load extension {cog_name}.")
+                print(f"  Error: {e}")
+                
         bot_token = os.getenv('DISCORD_TOKEN')
         if bot_token:
             await bot.start(bot_token)
