@@ -1414,7 +1414,7 @@ async def on_ready():
         
 async def main():
     async with bot:
-        cogs_to_load = ["Obscurity"]
+        cogs_to_load = ["Obscure"]
         for cog_name in cogs_to_load:
             try:
                 await bot.load_extension(cog_name)
