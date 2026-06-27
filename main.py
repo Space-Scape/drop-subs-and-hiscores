@@ -734,6 +734,7 @@ class JoinModal(discord.ui.Modal, title="Join Obscurity"):
             )
             await thread.add_user(interaction.user)
 
+            # 1. Setup the primary requirements embed
             requirements_embed = discord.Embed(
                 title="Clan Requirements",
                 description="Thanks for your interest in joining Obscurity. We're a learner-friendly and all-inclusive clan. Please send the requirements for the clan below so someone can assist you.",
@@ -747,21 +748,26 @@ class JoinModal(discord.ui.Modal, title="Join Obscurity"):
                 inline=False
             )
             
-            # Appending the modal response to the ticket embed
-            requirements_embed.add_field(
-                name="🗣️ Referral",
-                value=self.referral.value,
-                inline=False
+            # 2. Create the separate Join Method embed
+            join_method_embed = discord.Embed(
+                title="Join Method",
+                description=self.referral.value,
+                color=discord.Color.blurple()
             )
 
             welcome_message = f"Hello {interaction.user.mention}! A member of the <@&1517751423226613922> team will be right with you to help."
             
-            await thread.send(content=welcome_message, embed=requirements_embed, view=TicketControlView())
+            # 3. Pass both embeds in a list so they stack neatly in the ticket
+            await thread.send(
+                content=welcome_message, 
+                embeds=[requirements_embed, join_method_embed], 
+                view=TicketControlView()
+            )
+            
             await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
             
         else:
             await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
-
 # ---------------------------
 # 🔹 Welcome
 # ---------------------------
