@@ -4,8 +4,8 @@ from discord.ext import commands
 from datetime import datetime
 from discord import app_commands
 
-LOG_CHANNEL_ID = 1275464228421107713
-MESSAGE_LOG_CHANNEL_ID = 1272629843552501805 
+LOG_CHANNEL_ID = 1520357794904019065
+MESSAGE_LOG_CHANNEL_ID = 1520357794904019065 
 
 def format_dt(dt):
     """Formats a datetime object into a standard string."""
@@ -22,13 +22,13 @@ async def send_log(guild: discord.Guild, embed: discord.Embed, channel_id: int =
         except discord.HTTPException as e:
             print(f"Failed to send log: {e}")
 
-class Rancour(commands.Cog):
+class Obscurity(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print(f"Rancour has been loaded and is ready.")
+        print(f"Obscurity Logger has been loaded and is ready.")
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -141,7 +141,7 @@ class Rancour(commands.Cog):
             await interaction.response.send_message("❌ Could not resolve your server membership.", ephemeral=True)
             return
 
-        has_moderator_role = any(role.name == "Moderators" for role in member.roles)
+        has_moderator_role = any(role.name == "Administrators" for role in member.roles)
         perms = member.guild_permissions
         has_admin_permission = perms.administrator
         has_manage_guild_permission = perms.manage_guild
@@ -169,9 +169,10 @@ class Rancour(commands.Cog):
         finally:
             if os.path.exists(filename):
                 os.remove(filename)
+    
     @commands.command(name="export_ids")
     async def export_ids(self, ctx: commands.Context):
-        if not any(role.name == "Moderators" for role in ctx.author.roles):
+        if not any(role.name == "Administators" for role in ctx.author.roles):
             await ctx.send("❌ You do not have permission.", delete_after=5)
             return
         await ctx.typing()
@@ -182,4 +183,4 @@ class Rancour(commands.Cog):
         os.remove(filename)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Rancour(bot))
+    await bot.add_cog(Obscurity(bot))
