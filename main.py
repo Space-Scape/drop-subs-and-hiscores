@@ -574,35 +574,7 @@ class WelcomeTicketView(View):
     
     @discord.ui.button(label="Join The Clan", style=discord.ButtonStyle.blurple, custom_id="welcome_ticket_btn", emoji="👐")
     async def open_welcome_thread(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if isinstance(interaction.channel, discord.TextChannel):
-            thread_name = f"Welcome - {interaction.user.display_name}"
-            thread = await interaction.channel.create_thread(
-                name=thread_name,
-                type=discord.ChannelType.private_thread,
-                auto_archive_duration=1440
-            )
-            await thread.add_user(interaction.user)
-
-            requirements_embed = discord.Embed(
-                title="Clan Requirements",
-                description="Thanks for your interest in joining Obscurity. We're a learner-friendly and all-inclusive clan. Please send the requirements for the clan below so someone can assist you.",
-                color=discord.Color.blurple()
-            )
-            requirements_embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
-            
-            requirements_embed.add_field(
-                name="⏳ Response Time",
-                value="Admins are in various timezones. Please be patient after opening your ticket.",
-                inline=False
-            )
-
-            welcome_message = f"Hello {interaction.user.mention}! A member of the <@&1517751423226613922> team will be right with you to help."
-            
-            await thread.send(content=welcome_message, embed=requirements_embed, view=TicketControlView())
-            await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
-            
-        else:
-            await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
+        await interaction.response.send_modal(JoinModal())
 
 class SupportTicketView(View):
     def __init__(self):
@@ -743,6 +715,52 @@ class ColorPanelView(discord.ui.View):
         super().__init__(timeout=None)
         for i, (role_name, emoji) in enumerate(COLOR_ROLES_CONFIG):
             self.add_item(ColorButton(role_name, emoji, row=i // 5))
+
+class JoinModal(discord.ui.Modal, title="Join Obscurity"):
+    referral = discord.ui.TextInput(
+        label="How did you hear about us?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., Reddit, Friend, In-game...",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        if isinstance(interaction.channel, discord.TextChannel):
+            thread_name = f"Welcome - {interaction.user.display_name}"
+            thread = await interaction.channel.create_thread(
+                name=thread_name,
+                type=discord.ChannelType.private_thread,
+                auto_archive_duration=1440
+            )
+            await thread.add_user(interaction.user)
+
+            requirements_embed = discord.Embed(
+                title="Clan Requirements",
+                description="Thanks for your interest in joining Obscurity. We're a learner-friendly and all-inclusive clan. Please send the requirements for the clan below so someone can assist you.",
+                color=discord.Color.blurple()
+            )
+            requirements_embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+            
+            requirements_embed.add_field(
+                name="⏳ Response Time",
+                value="Admins are in various timezones. Please be patient after opening your ticket.",
+                inline=False
+            )
+            
+            # Appending the modal response to the ticket embed
+            requirements_embed.add_field(
+                name="🗣️ Referral",
+                value=self.referral.value,
+                inline=False
+            )
+
+            welcome_message = f"Hello {interaction.user.mention}! A member of the <@&1517751423226613922> team will be right with you to help."
+            
+            await thread.send(content=welcome_message, embed=requirements_embed, view=TicketControlView())
+            await interaction.response.send_message(f"Welcome ticket opened here: {thread.mention}", ephemeral=True)
+            
+        else:
+            await interaction.response.send_message("Ticket failed to open! Please try again...", ephemeral=True)
 
 # ---------------------------
 # 🔹 Welcome
