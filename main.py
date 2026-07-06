@@ -880,7 +880,7 @@ class EventsView(View):
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         self.add_item(RoleButton("Events", get_emoji("event")))
         self.add_item(RoleButton("Learn ToB!", get_emoji("sanguine")))
-        self.add_item(RoleButton("Game Nights", get_emoji("🎮")))
+        self.add_item(RoleButton("Game Nights", "🎮"))
         self.add_item(RoleButton("PvP", "💀"))
 
 # ---------------------------
