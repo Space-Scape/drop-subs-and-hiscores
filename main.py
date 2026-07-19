@@ -66,6 +66,13 @@ coffer_sheet = sheet_client_coffer.open_by_key(COFFER_SHEET_ID).worksheet(COFFER
 TICKET_CHANNEL_ID = 1518463880203079811
 VANITY_CHANNEL_ID = 1519007923940884510
 
+# ---------------------------
+# 🔹 Learner/Mentor Constants
+# ---------------------------
+LEARNER_CHANNEL_ID = 1517810142450548747
+MENTOR_TOB_ID = 1517712431202172948
+MENTOR_COX_ID = 1517713033386922135
+MENTOR_TOA_ID = 1517713374190764073
 
 # ---------------------------
 # 🔹 Discord Bot Setup
@@ -883,6 +890,166 @@ class EventsView(View):
         self.add_item(RoleButton("Game Nights", "🎮"))
         self.add_item(RoleButton("PvP", "💀"))
 
+class ToBModal(discord.ui.Modal, title="Learn Theatre of Blood"):
+    goals = discord.ui.TextInput(
+        label="What are you trying to learn?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., Beginner, Metas, Specific roles",
+        required=True
+    )
+    gear = discord.ui.TextInput(
+        label="What is your gear?",
+        style=discord.TextStyle.paragraph,
+        placeholder="Refer to the setups in the gear channel",
+        required=True
+    )
+    verzik = discord.ui.TextInput(
+        label="Have you ever been to Verzik?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+    hard_mode = discord.ui.TextInput(
+        label="Do you want to learn Hard Mode?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        if not channel:
+            await interaction.response.send_message("❌ Error: Learner channel not found.", ephemeral=True)
+            return
+
+        thread_name = f"ToB Learner - {interaction.user.display_name}"
+        thread = await channel.create_thread(
+            name=thread_name,
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(
+            title="🩸 ToB Learner Ticket",
+            color=discord.Color.red()
+        )
+        embed.add_field(name="Goals", value=self.goals.value, inline=False)
+        embed.add_field(name="Gear", value=self.gear.value, inline=False)
+        embed.add_field(name="Verzik Experience", value=self.verzik.value, inline=False)
+        embed.add_field(name="Hard Mode ToB", value=self.hard_mode.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_TOB_ID}>",
+            embed=embed,
+            view=TicketControlView() # Reusing your existing ticket control system
+        )
+        
+        await interaction.response.send_message(f"✅ Your ToB ticket has been opened: {thread.mention}", ephemeral=True)
+
+class CoXModal(discord.ui.Modal, title="Learn Chambers of Xeric"):
+    goals = discord.ui.TextInput(
+        label="What are you trying to learn?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., Beginner, Metas, CMs",
+        required=True
+    )
+    gear = discord.ui.TextInput(
+        label="What is your gear?",
+        style=discord.TextStyle.paragraph,
+        placeholder="Refer to the setups in the gear channel",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        thread = await channel.create_thread(
+            name=f"CoX Learner - {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(title="🐉 CoX Learner Ticket", color=discord.Color.green())
+        embed.add_field(name="Goals", value=self.goals.value, inline=False)
+        embed.add_field(name="Gear", value=self.gear.value, inline=False)
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_COX_ID}>",
+            embed=embed,
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Your CoX ticket has been opened: {thread.mention}", ephemeral=True)
+
+class ToAModal(discord.ui.Modal, title="Learn Tombs of Amascut"):
+    goals = discord.ui.TextInput(
+        label="What are you trying to learn?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., Invos, Insanity, Experts",
+        required=True
+    )
+    gear = discord.ui.TextInput(
+        label="What is your gear?",
+        style=discord.TextStyle.paragraph,
+        placeholder="Refer to the setups in the gear channel",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        thread = await channel.create_thread(
+            name=f"ToA Learner - {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(title="🏜️ ToA Learner Ticket", color=discord.Color.gold())
+        embed.add_field(name="Goals", value=self.goals.value, inline=False)
+        embed.add_field(name="Gear", value=self.gear.value, inline=False)
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_TOA_ID}>",
+            embed=embed,
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Your ToA ticket has been opened: {thread.mention}", ephemeral=True)
+
+class LearnerTicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label="Learn ToB", style=discord.ButtonStyle.danger, custom_id="learner_tob_btn", emoji="🩸")
+    async def open_tob_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ToBModal())
+
+    @discord.ui.button(label="Learn CoX", style=discord.ButtonStyle.success, custom_id="learner_cox_btn", emoji="🐉")
+    async def open_cox_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(CoXModal())
+
+    @discord.ui.button(label="Learn ToA", style=discord.ButtonStyle.primary, custom_id="learner_toa_btn", emoji="🏜️")
+    async def open_toa_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ToAModal())
+
+@bot.tree.command(name="panel_learner", description="Post the Mentor/Learner ticket panel.")
+@app_commands.checks.has_any_role("Administrators")
+async def panel_learner(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="📚 Learner & Mentor Requests", 
+        description="Looking to learn a raid? Click the corresponding button below to fill out a request form. A mentor will be pinged and will assist you in a private thread as soon as they are available.",
+        color=discord.Color.from_rgb(184, 249, 249)
+    )
+
+    embed.add_field(
+        name="⚠️ Gear Requirements",
+        value="Before applying, please ensure your gear meets the minimum requirements found here:\nhttps://discord.com/channels/1517374163655065631/1519831937575944243",
+        inline=False
+    )
+    
+    await interaction.response.send_message("Posting Learner panel...", ephemeral=True)
+    await interaction.channel.send(embed=embed, view=LearnerTicketView())
+
 # ---------------------------
 # 🔹 RSN Commands
 # ---------------------------
@@ -1416,13 +1583,14 @@ async def on_ready():
 
     # 🔹 Add this line so your ticket control buttons survive bot restarts
     bot.add_view(TicketControlView())
-
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
     bot.add_view(WelcomeTicketView())
     bot.add_view(SupportTicketView())
-    bot.add_view(ColorPanelView())
     bot.add_view(TimezoneView(bot.get_guild(GUILD_ID)))
+    bot.add_view(SupportTicketView())
+    bot.add_view(LearnerTicketView()) # Add this line!
+    bot.add_view(ColorPanelView())
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
