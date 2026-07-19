@@ -73,6 +73,9 @@ LEARNER_CHANNEL_ID = 1517810142450548747
 MENTOR_TOB_ID = 1517712431202172948
 MENTOR_COX_ID = 1517713033386922135
 MENTOR_TOA_ID = 1517713374190764073
+MENTOR_GENERAL_ID = 1517792847900966972
+MENTOR_COLO_ID = 1517792930721431562
+MENTOR_INFERNO_ID = 1517793042759680082
 
 # ---------------------------
 # 🔹 Discord Bot Setup
@@ -952,13 +955,25 @@ class CoXModal(discord.ui.Modal, title="Learn Chambers of Xeric"):
     goals = discord.ui.TextInput(
         label="What are you trying to learn?",
         style=discord.TextStyle.short,
-        placeholder="e.g., Beginner, Metas, CMs",
+        placeholder="e.g., Beginner, Metas",
         required=True
     )
     gear = discord.ui.TextInput(
         label="What is your gear?",
         style=discord.TextStyle.paragraph,
         placeholder="Refer to the setups in the gear channel",
+        required=True
+    )
+    dwh = discord.ui.TextInput(
+        label="Do you have a dragon warhammer?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+    challenge_mode = discord.ui.TextInput(
+        label="Do you want to learn Challenge Mode?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
         required=True
     )
 
@@ -974,6 +989,9 @@ class CoXModal(discord.ui.Modal, title="Learn Chambers of Xeric"):
         embed = discord.Embed(title="🐉 CoX Learner Ticket", color=discord.Color.green())
         embed.add_field(name="Goals", value=self.goals.value, inline=False)
         embed.add_field(name="Gear", value=self.gear.value, inline=False)
+        embed.add_field(name="Dragon Warhammer", value=self.dwh.value, inline=False)
+        embed.add_field(name="Challenge Mode", value=self.challenge_mode.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
 
         await thread.send(
             content=f"{interaction.user.mention} | <@&{MENTOR_COX_ID}>",
@@ -983,10 +1001,10 @@ class CoXModal(discord.ui.Modal, title="Learn Chambers of Xeric"):
         await interaction.response.send_message(f"✅ Your CoX ticket has been opened: {thread.mention}", ephemeral=True)
 
 class ToAModal(discord.ui.Modal, title="Learn Tombs of Amascut"):
-    goals = discord.ui.TextInput(
-        label="What are you trying to learn?",
+    invocation = discord.ui.TextInput(
+        label="What invocation level do you want to learn?",
         style=discord.TextStyle.short,
-        placeholder="e.g., Invos, Insanity, Experts",
+        placeholder="e.g., Normal mode, Expert Mode, or High Invo?",
         required=True
     )
     gear = discord.ui.TextInput(
@@ -1006,8 +1024,9 @@ class ToAModal(discord.ui.Modal, title="Learn Tombs of Amascut"):
         await thread.add_user(interaction.user)
 
         embed = discord.Embed(title="🏜️ ToA Learner Ticket", color=discord.Color.gold())
-        embed.add_field(name="Goals", value=self.goals.value, inline=False)
+        embed.add_field(name="Invocation Level", value=self.invocation.value, inline=False)
         embed.add_field(name="Gear", value=self.gear.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
 
         await thread.send(
             content=f"{interaction.user.mention} | <@&{MENTOR_TOA_ID}>",
@@ -1015,6 +1034,121 @@ class ToAModal(discord.ui.Modal, title="Learn Tombs of Amascut"):
             view=TicketControlView()
         )
         await interaction.response.send_message(f"✅ Your ToA ticket has been opened: {thread.mention}", ephemeral=True)
+
+class GeneralModal(discord.ui.Modal, title="Learn a Boss"):
+    boss = discord.ui.TextInput(
+        label="What boss do you want to learn?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., God Wars, Zulrah, Vorkath",
+        required=True
+    )
+    experience = discord.ui.TextInput(
+        label="Are you a beginner or learning mechanics?",
+        style=discord.TextStyle.short,
+        placeholder="e.g., Complete beginner, just need help with X",
+        required=True
+    )
+    gear = discord.ui.TextInput(
+        label="Do you have the gear for this boss?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        thread = await channel.create_thread(
+            name=f"Boss Learner - {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(title="⚔️ General Boss Learner Ticket", color=discord.Color.blue())
+        embed.add_field(name="Target Boss", value=self.boss.value, inline=False)
+        embed.add_field(name="Experience Level", value=self.experience.value, inline=False)
+        embed.add_field(name="Gear Ready", value=self.gear.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_GENERAL_ID}>",
+            embed=embed,
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Your Bossing ticket has been opened: {thread.mention}", ephemeral=True)
+
+
+class ColosseumModal(discord.ui.Modal, title="Learn the Colosseum"):
+    first_time = discord.ui.TextInput(
+        label="Is it your first time entering the Colo?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+    research = discord.ui.TextInput(
+        label="Have you researched this content at all?",
+        style=discord.TextStyle.paragraph,
+        placeholder="e.g., Watched guides, know the basics, etc.",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        thread = await channel.create_thread(
+            name=f"Colo Learner - {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(title="🏟️ Colosseum Learner Ticket", color=discord.Color.dark_theme())
+        embed.add_field(name="First Time?", value=self.first_time.value, inline=False)
+        embed.add_field(name="Prior Research", value=self.research.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_COLO_ID}>",
+            embed=embed,
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Your Colosseum ticket has been opened: {thread.mention}", ephemeral=True)
+
+
+class InfernoModal(discord.ui.Modal, title="Learn the Inferno"):
+    first_time = discord.ui.TextInput(
+        label="Is it your first time entering the Inferno?",
+        style=discord.TextStyle.short,
+        placeholder="Yes or No",
+        required=True
+    )
+    research = discord.ui.TextInput(
+        label="Have you researched this content at all?",
+        style=discord.TextStyle.paragraph,
+        placeholder="e.g., Watched guides, know the basics, etc.",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel = interaction.client.get_channel(LEARNER_CHANNEL_ID)
+        thread = await channel.create_thread(
+            name=f"Inferno Learner - {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread,
+            auto_archive_duration=1440
+        )
+        await thread.add_user(interaction.user)
+
+        embed = discord.Embed(title="🔥 Inferno Learner Ticket", color=discord.Color.orange())
+        embed.add_field(name="First Time?", value=self.first_time.value, inline=False)
+        embed.add_field(name="Prior Research", value=self.research.value, inline=False)
+        embed.set_footer(text="Please review: https://discord.com/channels/1517374163655065631/1519831937575944243")
+
+        await thread.send(
+            content=f"{interaction.user.mention} | <@&{MENTOR_INFERNO_ID}>",
+            embed=embed,
+            view=TicketControlView()
+        )
+        await interaction.response.send_message(f"✅ Your Inferno ticket has been opened: {thread.mention}", ephemeral=True)
+
 
 class LearnerTicketView(View):
     def __init__(self):
@@ -1031,6 +1165,18 @@ class LearnerTicketView(View):
     @discord.ui.button(label="Learn ToA", style=discord.ButtonStyle.primary, custom_id="learner_toa_btn", emoji="🏜️")
     async def open_toa_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(ToAModal())
+
+    @discord.ui.button(label="Learn General Boss", style=discord.ButtonStyle.secondary, custom_id="learner_general_btn", emoji="⚔️")
+    async def open_general_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(GeneralModal())
+
+    @discord.ui.button(label="Learn Colosseum", style=discord.ButtonStyle.secondary, custom_id="learner_colo_btn", emoji="🏟️")
+    async def open_colo_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ColosseumModal())
+
+    @discord.ui.button(label="Learn Inferno", style=discord.ButtonStyle.secondary, custom_id="learner_inferno_btn", emoji="🔥")
+    async def open_inferno_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(InfernoModal())
 
 @bot.tree.command(name="panel_learner", description="Post the Mentor/Learner ticket panel.")
 @app_commands.checks.has_any_role("Administrators")
