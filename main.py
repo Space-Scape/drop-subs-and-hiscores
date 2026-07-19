@@ -900,6 +900,7 @@ class OtherRolesView(View):
         self.add_item(RoleButton("Other Games", "🎮"))
         self.add_item(RoleButton("Geoguessr", "🌍"))
         self.add_item(RoleButton("Osrs TCG", "🃏"))
+        self.add_item(RoleButton("Movie Nights", "🍿"))
 
 class ToBModal(discord.ui.Modal, title="Learn Theatre of Blood"):
     goals = discord.ui.TextInput(
