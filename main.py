@@ -146,7 +146,8 @@ Below you will find everything you need to know about how our clan operates.
     channels_embed.add_field(
         name="📢 【 ANNOUNCEMENTS 】",
         value="""• **#📣announcements** - Official clan news, events, and updates.
-• **#👤personal-announcements** - Member milestones and personal updates.""",
+        • **#👤personal-announcements** - Member milestones and personal updates.
+        • **#💥rank-up-announcements** - Announcements for achieved rank-ups""",
         inline=False
     )
     channels_embed.add_field(
@@ -154,8 +155,7 @@ Below you will find everything you need to know about how our clan operates.
         value="""• **#❗info** - You are here! General clan information.
 • **#📚rules** - Our clan rules and community guidelines.
 • **#✌️welcome** - The main entry point for new arrivals.
-• **#🎯role-select** - Choose your ping preferences and bossing roles.
-• **#🌸color-select** - Pick a custom color for your Discord name.
+• **#🎯role-select** - Choose your ping preferences and bossing roles and pick a custom color.
 • **#💡link-rsn-to-join** - Verify your OSRS account here to gain full access.""",
         inline=False
     )
