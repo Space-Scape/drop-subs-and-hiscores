@@ -890,8 +890,16 @@ class EventsView(View):
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         self.add_item(RoleButton("Events", get_emoji("event")))
         self.add_item(RoleButton("Learn ToB!", get_emoji("sanguine")))
-        self.add_item(RoleButton("Game Nights", "🎮"))
         self.add_item(RoleButton("PvP", "💀"))
+
+class OtherRolesView(View):
+    def __init__(self, guild: discord.Guild):
+        super().__init__(timeout=None)
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+        # Using some default discord emojis here, but feel free to swap them out!
+        self.add_item(RoleButton("Game Nights", "🎮"))
+        self.add_item(RoleButton("Geoguessr", "🌍"))
+        self.add_item(RoleButton("Osrs TCG", "🃏"))
 
 class ToBModal(discord.ui.Modal, title="Learn Theatre of Blood"):
     goals = discord.ui.TextInput(
@@ -1611,6 +1619,7 @@ async def send_combined_panels(channel: discord.TextChannel):
     await channel.send("**𝕽𝖆𝖎𝖉𝖘**", view=RaidsView(channel.guild))
     await channel.send("**𝕭𝖔𝖘𝖘𝖊𝖘**", view=BossesView(channel.guild))
     await channel.send("**𝕰𝖛𝖊𝖓𝖙𝖘**", view=EventsView(channel.guild))
+    await channel.send("**𝕺𝖙𝖍𝖊𝖗 𝕽𝖔𝖑𝖊𝖘**", view=OtherRolesView(channel.guild))
 
 # ---------------------------
 # 🔹 Bot Events
@@ -1735,8 +1744,7 @@ async def on_ready():
     bot.add_view(SupportTicketView())
     bot.add_view(TimezoneView(bot.get_guild(GUILD_ID)))
     bot.add_view(SupportTicketView())
-    bot.add_view(LearnerTicketView()) # Add this line!
-    bot.add_view(ColorPanelView())
+    bot.add_view(LearnerTicketView())
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
@@ -1744,6 +1752,7 @@ async def on_ready():
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
             bot.add_view(EventsView(guild))    
+            bot.add_view(OtherRolesView(guild))
         if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(TimezoneView(guild))
         if bot.get_channel(VANITY_CHANNEL_ID):
