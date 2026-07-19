@@ -897,7 +897,7 @@ class OtherRolesView(View):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         # Using some default discord emojis here, but feel free to swap them out!
-        self.add_item(RoleButton("Game Nights", "🎮"))
+        self.add_item(RoleButton("Other Games", "🎮"))
         self.add_item(RoleButton("Geoguessr", "🌍"))
         self.add_item(RoleButton("Osrs TCG", "🃏"))
 
