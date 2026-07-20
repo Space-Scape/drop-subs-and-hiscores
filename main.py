@@ -453,7 +453,7 @@ class TicketControlView(discord.ui.View):
             await interaction.response.send_modal(ReasonModal(interaction.channel, creator))
 
 class VanityTicketButton(discord.ui.Button):
-    def __init__(self, role_name: str, emoji=None):
+    def __init__(self, role_name: str, requirements: str, emoji=None):
         super().__init__(
             label=role_name, 
             style=discord.ButtonStyle.secondary, 
@@ -461,6 +461,7 @@ class VanityTicketButton(discord.ui.Button):
             custom_id=f"vanity_ticket_{role_name.replace(' ', '_')}"
         )
         self.role_name = role_name
+        self.requirements = requirements
 
     async def callback(self, interaction: discord.Interaction):
         if not isinstance(interaction.channel, discord.TextChannel):
@@ -480,17 +481,16 @@ class VanityTicketButton(discord.ui.Button):
             color=discord.Color.from_rgb(184, 249, 249)
         )
         
-        if self.role_name == "Zenyte":
-            embed.description = (
-                f"Hello {interaction.user.mention}!\n\n"
-                "To claim the **Zenyte** rank, please upload a **full-client screenshot** showing "
-                "a **Dragon Warhammer, BGS, or Elder Maul** in your inventory."
-            )
-        else:
-            embed.description = (
-                f"Hello {interaction.user.mention}!\n\n"
-                f"Please provide any required screenshots or proof to claim your **{self.role_name}** rank."
-            )
+        embed.description = (
+            f"Hello {interaction.user.mention}!\n\n"
+            f"To claim the **{self.role_name}** rank, you must meet the following requirements:\n"
+            f"> **{self.requirements}**\n\n"
+            "**⚠️ SCREENSHOT REQUIREMENTS ⚠️**\n"
+            "Per clan rules, you **must** provide full client screenshots with your chatbox open to be approved for this rank. Cropped images will be rejected."
+        )
+
+        if self.emoji and self.emoji.url:
+            embed.set_thumbnail(url=self.emoji.url)
 
         await thread.send(
             content=f"{interaction.user.mention} <@&{ADMINISTRATOR_ROLE_ID}>", 
@@ -499,22 +499,23 @@ class VanityTicketButton(discord.ui.Button):
         )
         await interaction.response.send_message(f"✅ Application ticket opened: {thread.mention}", ephemeral=True)
 
+
 class VanityView(View):
     def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         
-        self.add_item(VanityTicketButton("Recruit", get_emoji("recruit")))
-        self.add_item(VanityTicketButton("Pawn", get_emoji("pawn")))
-        self.add_item(VanityTicketButton("Corporal", get_emoji("corporal")))
-        self.add_item(VanityTicketButton("Novice", get_emoji("novice")))
-        self.add_item(VanityTicketButton("Sergeant", get_emoji("sergeant")))
-        self.add_item(VanityTicketButton("Marshall", get_emoji("marshall")))
-        self.add_item(VanityTicketButton("TzKal", get_emoji("tzkal")))
+        self.add_item(VanityTicketButton("Recruit", "Combat 80 + Dragon Gloves, Dragon Defender", get_emoji("recruit")))
+        self.add_item(VanityTicketButton("Pawn", "Combat 90 + Barrow Gloves, Regular Void, Medium CAs", get_emoji("pawn")))
+        self.add_item(VanityTicketButton("Corporal", "Combat 100 + Elite Void, Piety, Fire Cape", get_emoji("corporal")))
+        self.add_item(VanityTicketButton("Novice", "Combat 110 + Upgraded Runepouch, Hard CA's", get_emoji("novice")))
+        self.add_item(VanityTicketButton("Sergeant", "Combat 120 + Quiver, Elite CA's", get_emoji("sergeant")))
+        self.add_item(VanityTicketButton("Marshall", "Combat 122 + Infernal cape, Master CA's", get_emoji("marshall")))
+        self.add_item(VanityTicketButton("TzKal", "Grandmaster CA's + 2200 total level", get_emoji("tzkal")))
         
-        self.add_item(VanityTicketButton("Hellcat", get_emoji("hellcat")))
-        self.add_item(VanityTicketButton("Coordinator", get_emoji("coordinator")))
-        self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) 
+        self.add_item(VanityTicketButton("Hellcat", "Minimum total of 20 pets obtained", get_emoji("hellcat")))
+        self.add_item(VanityTicketButton("Coordinator", "Filled 1000 collection log slots", get_emoji("coordinator")))
+        self.add_item(VanityTicketButton("Maxed", "2376 total level", get_emoji("maxed"))) 
         
         self.add_item(RoleButton("Serenist", get_emoji("seren")))
         self.add_item(RoleButton("Dogsbody", get_emoji("dogsbody")))
