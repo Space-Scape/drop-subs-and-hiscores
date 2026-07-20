@@ -516,7 +516,7 @@ class VanityView(View):
         self.add_item(VanityTicketButton("Coordinator", get_emoji("coordinator")))
         self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) 
         
-        self.add_item(RoleButton("Serenist", get_emoji("serenist")))
+        self.add_item(RoleButton("Serenist", get_emoji("seren")))
         self.add_item(RoleButton("Dogsbody", get_emoji("dogsbody")))
         self.add_item(RoleButton("Skiller", get_emoji("skiller")))
 
