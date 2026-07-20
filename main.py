@@ -531,13 +531,13 @@ class VanityView(View):
         self.add_item(VanityTicketButton("Pawn", "Combat 90 + Barrow Gloves, Regular Void, Medium CAs", get_emoji("pawn")))
         self.add_item(VanityTicketButton("Corporal", "Combat 100 + Elite Void, Piety, Fire Cape", get_emoji("corporal")))
         self.add_item(VanityTicketButton("Novice", "Combat 110 + Upgraded Runepouch, Hard CA's", get_emoji("novice")))
-        self.add_item(VanityTicketButton("Sergeant", "Combat 120 + Quiver, Elite CA's", get_emoji("sergeant")))
-        self.add_item(VanityTicketButton("Marshall", "Combat 122 + Infernal cape, Master CA's", get_emoji("marshall")))
-        self.add_item(VanityTicketButton("TzKal", "Grandmaster CA's + 2200 total level", get_emoji("tzkal")))
+        self.add_item(VanityTicketButton("Sergeant", "Combat 120 + Quiver *or* Infernal Cape, Elite CA's", get_emoji("sergeant")))
+        self.add_item(VanityTicketButton("Marshall", "Combat 122 + Quiver *and* Infernal cape, Master CA's", get_emoji("marshall")))
+        self.add_item(VanityTicketButton("TzKal", "Grandmaster CA's", get_emoji("tzkal")))
         
         self.add_item(VanityTicketButton("Pet Hunter", "Minimum total of 20 pets obtained", get_emoji("hellcat")))
         self.add_item(VanityTicketButton("Collection Logger", "Filled 1000 collection log slots", get_emoji("coordinator")))
-        self.add_item(VanityTicketButton("Maxed", "2376 total level", get_emoji("maxed"))) 
+        self.add_item(VanityTicketButton("Maxed", "2376 total level", get_emoji("maxed")))
         
         self.add_item(RoleButton("Serenist", get_emoji("seren")))
         self.add_item(RoleButton("Dogsbody", get_emoji("dogsbody")))
