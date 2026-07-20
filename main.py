@@ -302,62 +302,6 @@ async def rules(interaction: discord.Interaction):
     await interaction.channel.send(embeds=rule_embeds)
     await interaction.followup.send("✅ Rules message has been posted.", ephemeral=True)
 
-
-# ---------------------------
-# 🔹 Rank Command
-# ---------------------------
-
-@bot.tree.command(name="rank", description="Post the clan rank requirements.")
-@app_commands.checks.has_any_role("Administrators")
-async def rank(interaction: discord.Interaction):
-    """Posts a series of embeds detailing the clan rank requirements."""
-    await interaction.response.defer(ephemeral=True, thinking=True)
-
-    rank_data = [
-        ("<:zenyte:1519040363686527187>", "Zenyte", "This role requires a dragon warhammer, BGS, or elder maul and should be applied for."),
-        ("<:bloodlust:1519037132704841738>", "ToB Rank", "Take this rank if your favorite raid is ToB"),
-        ("<:xerician:1519039860269121796>", "CoX Rank", "Take this rank if your favorite raid is CoX"),
-        ("<:tombraider:1519040232148697191>", "ToA Rank", "Take this rank if your favorite raid is ToA"),
-        ("<:raider:1519037265878319317>", "Raider Rank", "Take this rank if you just like to raid"),
-        ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*"),
-        ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling"),
-        ("<:tob_mentor:1519039992398217257>", "ToB Mentor", "ToB mentors will have this rank"),
-        ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
-        ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
-        ("<:pvp:1519037569076039701>", "Pker", "Take this if you like to do PvP"),
-        ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan"),
-        ("<:zammy:1519259451096567838>", "Zamorak", "Take this rank if you align with Zamorak."),
-        ("<:sara:1519259236805382206>", "Saradomin", "Take this rank if you align with Saradomin."),
-        ("<:bandos:1519259058668966018>", "Bandos", "Take this rank if you align with Bandos."),
-        ("<:arma:1519259007443800064>", "Armadyl", "Take this rank if you align with Armadyl."),
-        ("<:seren:1519259305658814474>", "Seren", "Take this rank if you align with Seren."),
-        ("<:zaros:1519259381378711673>", "Zaros", "Take this rank if you align with Zaros."),
-        ("<:guthix:1519259163279097936>", "Guthixian", "Take this rank if you align with Guthix.")
-    ]
-
-    rank_colors = [
-        (184, 249, 249), (190, 249, 241), (196, 249, 233), (203, 249, 225),
-        (209, 249, 217), (216, 249, 209), (222, 249, 201), (229, 249, 193),
-        (235, 250, 185), (242, 250, 177), (248, 250, 168), (255, 250, 160),
-        # 🔹 7 New Colors for the new embeds 🔹
-        (255, 235, 150), (255, 220, 140), (255, 205, 130), (255, 190, 120),
-        (255, 175, 110), (255, 160, 100), (255, 145, 90)
-    ]
-
-    rank_embeds = [
-        discord.Embed(
-            title=f"{emoji}  {name}", 
-            description=description, 
-            color=discord.Color.from_rgb(*rank_colors[i])
-        )
-        for i, (emoji, name, description) in enumerate(rank_data)
-    ]
-
-    await interaction.channel.send(embeds=rank_embeds[:10])
-    await interaction.channel.send(embeds=rank_embeds[10:], view=VanityView(interaction.guild))
-
-    await interaction.followup.send("✅ Rank embeds and application buttons have been posted.", ephemeral=True)
-
 # ---------------------------
 # 🔹 Say Command
 # ---------------------------
@@ -560,22 +504,20 @@ class VanityView(View):
         super().__init__(timeout=None)
         get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
         
-        self.add_item(VanityTicketButton("Zenyte", get_emoji("zenyte")))
+        self.add_item(VanityTicketButton("Recruit", get_emoji("recruit")))
+        self.add_item(VanityTicketButton("Pawn", get_emoji("pawn")))
+        self.add_item(VanityTicketButton("Corporal", get_emoji("corporal")))
+        self.add_item(VanityTicketButton("Novice", get_emoji("novice")))
+        self.add_item(VanityTicketButton("Sergeant", get_emoji("sergeant")))
+        self.add_item(VanityTicketButton("Marshall", get_emoji("marshall")))
+        self.add_item(VanityTicketButton("TzKal", get_emoji("tzkal")))
+        
+        self.add_item(VanityTicketButton("Hellcat", get_emoji("hellcat")))
+        self.add_item(VanityTicketButton("Coordinator", get_emoji("coordinator")))
         self.add_item(VanityTicketButton("Maxed", get_emoji("maxed"))) 
         
-        self.add_item(RoleButton("Zamorak", get_emoji("zammy")))
-        self.add_item(RoleButton("Saradomin", get_emoji("sara")))
-        self.add_item(RoleButton("Bandos", get_emoji("bandos")))
-        self.add_item(RoleButton("Armadyl", get_emoji("arma")))
-        self.add_item(RoleButton("Seren", get_emoji("seren")))
-        self.add_item(RoleButton("Zaros", get_emoji("zaros")))
-        self.add_item(RoleButton("Guthixian", get_emoji("guthix")))
-
-        self.add_item(RoleButton("Bloodlust", get_emoji("bloodlust")))
-        self.add_item(RoleButton("Chamber Explorer", get_emoji("chamberexplorer")))
-        self.add_item(RoleButton("Tomb Raider", get_emoji("tombraider")))
-        self.add_item(RoleButton("Raider", get_emoji("raider")))
-        self.add_item(RoleButton("Pker", get_emoji("pvp")))
+        self.add_item(RoleButton("Serenist", get_emoji("serenist")))
+        self.add_item(RoleButton("Dogsbody", get_emoji("dogsbody")))
         self.add_item(RoleButton("Skiller", get_emoji("skiller")))
 
 class WelcomeTicketView(View):
@@ -1640,27 +1582,20 @@ async def setup_panels(interaction: discord.Interaction):
     if vanity_channel := bot.get_channel(VANITY_CHANNEL_ID):
         await vanity_channel.purge(limit=20)
         
-        # Generate the full list of info embeds
         rank_data = [
-            ("<:zenyte:1519040363686527187>", "Zenyte", "This role requires a dragon warhammer, BGS, or elder maul and should be applied for."),
-            ("<:bloodlust:1519037132704841738>", "ToB Rank", "Take this rank if your favorite raid is ToB"),
-            ("<:xerician:1519039860269121796>", "CoX Rank", "Take this rank if your favorite raid is CoX"),
-            ("<:tombraider:1519040232148697191>", "ToA Rank", "Take this rank if your favorite raid is ToA"),
-            ("<:raider:1519037265878319317>", "Raider Rank", "Take this rank if you just like to raid"),
-            ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*"),
-            ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling"),
-            ("<:tob_mentor:1519039992398217257>", "ToB Mentor", "ToB mentors will have this rank"),
-            ("<:cox_mentor:1519037414398754906>", "CoX Mentor", "CoX mentors will have this rank"),
-            ("<:toa_mentor:1519037674319511602>", "ToA Mentor", "ToA mentors will have this rank"),
-            ("<:pvp:1519037569076039701>", "Pker", "Take this if you like to do PvP"),
-            ("<:coordinator:1519037196974424194>", "Event Coordinator", "This one is for those who wish to run events for the clan"),
-            ("<:zammy:1519259451096567838>", "Zamorak", "Take this rank if you align with Zamorak."),
-            ("<:sara:1519259236805382206>", "Saradomin", "Take this rank if you align with Saradomin."),
-            ("<:bandos:1519259058668966018>", "Bandos", "Take this rank if you align with Bandos."),
-            ("<:arma:1519259007443800064>", "Armadyl", "Take this rank if you align with Armadyl."),
-            ("<:seren:1519259305658814474>", "Seren", "Take this rank if you align with Seren."),
-            ("<:zaros:1519259381378711673>", "Zaros", "Take this rank if you align with Zaros."),
-            ("<:guthix:1519259163279097936>", "Guthixian", "Take this rank if you align with Guthix.")
+            ("<:seren:1519259305658814474>", "Serenist", "New members who want to (learn) pvm."),
+            ("<:dogsbody:1528781938348003490>", "Dogsbody", "New members who are here for vibes and community without focus on pvm."),
+            ("<:recruit:1528782491609993236>", "Recruit", "Combat 80 + Dragon Gloves, Dragon Defender."),
+            ("<:pawn:1528782545515450408>", "Pawn", "Combat 90 + Barrow Gloves, Regular Void, Medium CAs."),
+            ("<:corporal:1528782001128341534>", "Corporal", "Combat 100 + Elite Void, Piety, Fire Cape."),
+            ("<:novice:1528782606500364369>", "Novice", "Combat 110 + Upgraded Runepouch, Hard CA's."),
+            ("<:sergeant:1528782656098009249>", "Sergeant", "Combat 120 + Quiver, Elite CA's."),
+            ("<:marshall:1528782872851517540>", "Marshall", "Combat 122 + Infernal cape, Master CA's."),
+            ("<:tzkal:1528782733457752155>", "TzKal", "Grandmaster CA's + 2200 total level."),
+            ("<:hellcat:1528782783718228181>", "Hellcat", "Pet rank that requires a minimum total of 20 pets obtained."),
+            ("<:coordinator:1519037196974424194>", "Coordinator", "Must have filled 1000 collection log slots."),
+            ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling."),
+            ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*."),
         ]
 
         rank_colors = [
@@ -1680,17 +1615,14 @@ async def setup_panels(interaction: discord.Interaction):
             for i, (emoji, name, description) in enumerate(rank_data)
         ]
 
-        # Discord only allows 10 embeds per message. Send the first 10 first.
         await vanity_channel.send(embeds=rank_embeds[:10])
 
-        # Attach the header text to explain the buttons at the very bottom
         header_embed = discord.Embed(
             title="⚔️ Apply for Ranks",
             description="Click a button below to open a ticket and submit proof for a specific rank, or instantly toggle non-ticket roles.",
             color=discord.Color.from_rgb(184, 249, 249)
         )
         
-        # Combine the remaining 9 embeds + the header + the buttons
         final_embeds = rank_embeds[10:] + [header_embed]
         await vanity_channel.send(embeds=final_embeds, view=VanityView(interaction.guild))
         
@@ -1737,7 +1669,6 @@ async def on_ready():
         except Exception as e:
             print(f"❌ Command sync failed: {e}")
 
-    # 🔹 Add this line so your ticket control buttons survive bot restarts
     bot.add_view(TicketControlView())
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
