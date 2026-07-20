@@ -491,36 +491,47 @@ class VanityTicketButton(discord.ui.Button):
             await interaction.response.send_message("❌ This can only be used in a text channel.", ephemeral=True)
             return
 
-        thread_name = f"{self.role_name} - {interaction.user.display_name}"
-        thread = await interaction.channel.create_thread(
-            name=thread_name,
-            type=discord.ChannelType.private_thread,
-            auto_archive_duration=1440
-        )
-        await thread.add_user(interaction.user)
+        # 1. Defer the interaction immediately so Discord knows the bot is working on it
+        await interaction.response.defer(ephemeral=True)
 
-        embed = discord.Embed(
-            title=f"⚔️ {self.role_name} Rank Application",
-            color=discord.Color.from_rgb(184, 249, 249)
-        )
-        
-        embed.description = (
-            f"Hello {interaction.user.mention}!\n\n"
-            f"To claim the **{self.role_name}** rank, you must meet the following requirements:\n"
-            f"> **{self.requirements}**\n\n"
-            "**⚠️ SCREENSHOT REQUIREMENTS ⚠️**\n"
-            "Per clan rules, you **must** provide full client screenshots with your chatbox open to be approved for this rank. Cropped images will be rejected."
-        )
+        try:
+            # 2. Safely process the API calls
+            thread_name = f"{self.role_name} - {interaction.user.display_name}"
+            thread = await interaction.channel.create_thread(
+                name=thread_name,
+                type=discord.ChannelType.private_thread,
+                auto_archive_duration=1440
+            )
+            await thread.add_user(interaction.user)
 
-        if self.emoji and self.emoji.url:
-            embed.set_thumbnail(url=self.emoji.url)
+            embed = discord.Embed(
+                title=f"⚔️ {self.role_name} Rank Application",
+                color=discord.Color.from_rgb(184, 249, 249)
+            )
+            
+            embed.description = (
+                f"Hello {interaction.user.mention}!\n\n"
+                f"To claim the **{self.role_name}** rank, you must meet the following requirements:\n"
+                f"> **{self.requirements}**\n\n"
+                "**⚠️ SCREENSHOT REQUIREMENTS ⚠️**\n"
+                "Per clan rules, you **must** provide full client screenshots with your chatbox open to be approved for this rank. Cropped images will be rejected."
+            )
 
-        await thread.send(
-            content=f"{interaction.user.mention} <@&{ADMINISTRATOR_ROLE_ID}>", 
-            embed=embed, 
-            view=TicketControlView()
-        )
-        await interaction.response.send_message(f"✅ Application ticket opened: {thread.mention}", ephemeral=True)
+            if self.emoji and self.emoji.url:
+                embed.set_thumbnail(url=self.emoji.url)
+
+            await thread.send(
+                content=f"{interaction.user.mention} <@&{ADMINISTRATOR_ROLE_ID}>", 
+                embed=embed, 
+                view=TicketControlView()
+            )
+            
+            # 3. Use followup.send instead of response.send_message since we deferred earlier
+            await interaction.followup.send(f"✅ Application ticket opened: {thread.mention}", ephemeral=True)
+            
+        except Exception as e:
+            # If rate-limited, it fails gracefully and tells the user
+            await interaction.followup.send(f"❌ Failed to create ticket. Please try again in a moment. (Error: `{e}`)", ephemeral=True)
 
 
 class VanityView(View):
