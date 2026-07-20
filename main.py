@@ -535,8 +535,8 @@ class VanityView(View):
         self.add_item(VanityTicketButton("Marshall", "Combat 122 + Infernal cape, Master CA's", get_emoji("marshall")))
         self.add_item(VanityTicketButton("TzKal", "Grandmaster CA's + 2200 total level", get_emoji("tzkal")))
         
-        self.add_item(VanityTicketButton("Hellcat", "Minimum total of 20 pets obtained", get_emoji("hellcat")))
-        self.add_item(VanityTicketButton("Coordinator", "Filled 1000 collection log slots", get_emoji("coordinator")))
+        self.add_item(VanityTicketButton("Pet Hunter", "Minimum total of 20 pets obtained", get_emoji("hellcat")))
+        self.add_item(VanityTicketButton("Collection Logger", "Filled 1000 collection log slots", get_emoji("coordinator")))
         self.add_item(VanityTicketButton("Maxed", "2376 total level", get_emoji("maxed"))) 
         
         self.add_item(RoleButton("Serenist", get_emoji("seren")))
@@ -1615,8 +1615,8 @@ async def setup_panels(interaction: discord.Interaction):
             ("<:sergeant:1528782656098009249>", "Sergeant", "Combat 120 + Quiver, Elite CA's."),
             ("<:marshall:1528782872851517540>", "Marshall", "Combat 122 + Infernal cape, Master CA's."),
             ("<:tzkal:1528782733457752155>", "TzKal", "Grandmaster CA's + 2200 total level."),
-            ("<:hellcat:1528782783718228181>", "Hellcat", "Pet rank that requires a minimum total of 20 pets obtained."),
-            ("<:coordinator:1519037196974424194>", "Coordinator", "Must have filled 1000 collection log slots."),
+            ("<:hellcat:1528782783718228181>", "Pet Hunter", "Pet rank that requires a minimum total of 20 pets obtained."),
+            ("<:coordinator:1519037196974424194>", "Collection Logger", "Must have filled 1000 collection log slots."),
             ("<:skiller:1519037750748119252>", "Skiller", "Take this rank if you primarily do skilling."),
             ("<:maxed:1519037333796814978>", "Maxed", "Take this rank if you're 2376 total level\n*(will be removed if you're not)*."),
         ]
