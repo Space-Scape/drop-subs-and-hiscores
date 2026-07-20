@@ -101,7 +101,6 @@ COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
 
 PROMOTION_CHANNEL_ID = 1528490049782546514
 
-# Maps the role names exactly to their custom emojis
 RANK_EMOJIS = {
     "Serenist": "<:seren:1519259305658814474>",
     "Dogsbody": "<:dogsbody:1528781938348003490>",
@@ -111,13 +110,15 @@ RANK_EMOJIS = {
     "Novice": "<:novice:1528782606500364369>",
     "Sergeant": "<:sergeant:1528782656098009249>",
     "Marshall": "<:marshall:1528782872851517540>",
-    "TzKal": "<:tzkal:1528782733457752155>"
+    "TzKal": "<:tzkal:1528782733457752155>",
+    "Hellcat": "<:hellcat:1528782783718228181>",         
+    "Coordinator": "<:coordinator:1519037196974424194>", 
+    "Maxed": "<:maxed:1519037333796814978>"              
 }
 
-# The hierarchy list from lowest rank to highest rank
 RANK_HIERARCHY = [
     "Serenist", "Dogsbody", "Recruit", "Pawn", "Corporal", 
-    "Novice", "Sergeant", "Marshall", "TzKal"
+    "Novice", "Sergeant", "Marshall", "TzKal", "Hellcat", "Coordinator", "Maxed"
 ]
 
 GUILD_ID = 1517374163655065631
@@ -1668,6 +1669,7 @@ async def on_message(message: discord.Message):
 async def on_member_update(before: discord.Member, after: discord.Member):
     if after.bot or before.roles == after.roles: return
 
+    # --- Existing Inactive Role Logic ---
     inactive_role = discord.utils.get(after.guild.roles, id=INACTIVE_ROLE_ID)
     if inactive_role and inactive_role in (set(after.roles) - set(before.roles)):
         try:
@@ -1675,6 +1677,8 @@ async def on_member_update(before: discord.Member, after: discord.Member):
         except:
             pass
 
+    # --- New Promotion Logic ---
+    # Helper function to find the user's highest current progression rank
     def get_highest_rank(member: discord.Member):
         for rank in reversed(RANK_HIERARCHY):
             if discord.utils.get(member.roles, name=rank):
@@ -1692,7 +1696,13 @@ async def on_member_update(before: discord.Member, after: discord.Member):
                 old_emoji = RANK_EMOJIS[old_rank]
                 new_emoji = RANK_EMOJIS[new_rank]
                 
-                await channel.send(f"🎉 {after.mention} {old_emoji} ➜ {new_emoji}")
+                message_text = (
+                    f"🎊 **Promotion!** 🎊\n"
+                    f"Congratulations to {after.mention} on the new rank!\n"
+                    f"> {old_emoji} ➜ {new_emoji}"
+                )
+                
+                await channel.send(message_text)
 
 @bot.event
 async def on_ready():
