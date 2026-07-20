@@ -102,6 +102,7 @@ COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
 PROMOTION_CHANNEL_ID = 1528490049782546514
 
 RANK_EMOJIS = {
+    "Member": "<:seren:1519259305658814474>",
     "Serenist": "<:seren:1519259305658814474>",
     "Dogsbody": "<:dogsbody:1528781938348003490>",
     "Recruit": "<:recruit:1528782491609993236>",
