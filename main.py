@@ -99,6 +99,27 @@ COLOR_ROLES_CONFIG = [
 ]
 COLOR_ROLE_NAMES = {name for name, _ in COLOR_ROLES_CONFIG}
 
+PROMOTION_CHANNEL_ID = 1528490049782546514
+
+# Maps the role names exactly to their custom emojis
+RANK_EMOJIS = {
+    "Serenist": "<:seren:1519259305658814474>",
+    "Dogsbody": "<:dogsbody:1528781938348003490>",
+    "Recruit": "<:recruit:1528782491609993236>",
+    "Pawn": "<:pawn:1528782545515450408>",
+    "Corporal": "<:corporal:1528782001128341534>",
+    "Novice": "<:novice:1528782606500364369>",
+    "Sergeant": "<:sergeant:1528782656098009249>",
+    "Marshall": "<:marshall:1528782872851517540>",
+    "TzKal": "<:tzkal:1528782733457752155>"
+}
+
+# The hierarchy list from lowest rank to highest rank
+RANK_HIERARCHY = [
+    "Serenist", "Dogsbody", "Recruit", "Pawn", "Corporal", 
+    "Novice", "Sergeant", "Marshall", "TzKal"
+]
+
 GUILD_ID = 1517374163655065631
 COLLAT_CHANNEL_ID = 1517385356452958338
 ADMINISTRATOR_ROLE_ID = 1517751423226613922
@@ -1654,7 +1675,24 @@ async def on_member_update(before: discord.Member, after: discord.Member):
         except:
             pass
 
-has_synced = False
+    def get_highest_rank(member: discord.Member):
+        for rank in reversed(RANK_HIERARCHY):
+            if discord.utils.get(member.roles, name=rank):
+                return rank
+        return None
+
+    old_rank = get_highest_rank(before)
+    new_rank = get_highest_rank(after)
+
+    if old_rank and new_rank and old_rank != new_rank:
+        if RANK_HIERARCHY.index(new_rank) > RANK_HIERARCHY.index(old_rank):
+            
+            channel = after.guild.get_channel(PROMOTION_CHANNEL_ID)
+            if channel:
+                old_emoji = RANK_EMOJIS[old_rank]
+                new_emoji = RANK_EMOJIS[new_rank]
+                
+                await channel.send(f"🎉 {after.mention} {old_emoji} ➜ {new_emoji}")
 
 @bot.event
 async def on_ready():
