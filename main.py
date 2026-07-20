@@ -117,7 +117,7 @@ RANK_EMOJIS = {
 }
 
 RANK_HIERARCHY = [
-    "Serenist", "Dogsbody", "Recruit", "Pawn", "Corporal", 
+    "Member", "Serenist", "Dogsbody", "Recruit", "Pawn", "Corporal", 
     "Novice", "Sergeant", "Marshall", "TzKal", "Hellcat", "Coordinator", "Maxed"
 ]
 
