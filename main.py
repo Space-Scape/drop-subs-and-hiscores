@@ -866,47 +866,6 @@ class WelcomeView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-@bot.tree.command(name="welcome", description="Welcome the ticket creator and give them default roles.")
-async def welcome(interaction: discord.Interaction):
-    if not isinstance(interaction.channel, discord.Thread):
-        await interaction.response.send_message("⚠️ This command must be used inside a ticket thread.", ephemeral=True)
-        return
-
-    ticket_creator = None
-    async for message in interaction.channel.history(limit=20, oldest_first=True):
-        if message.author.bot:
-            for mention in message.mentions:
-                if not mention.bot:
-                    ticket_creator = mention
-                    break
-            if ticket_creator:
-                break
-
-    if not ticket_creator:
-        await interaction.response.send_message("⚠️ Could not detect who opened this ticket.", ephemeral=True)
-        return
-
-    roles_to_assign = ["Member"] 
-    missing_roles = []
-    guild = interaction.guild
-
-    for role_name in roles_to_assign:
-        role = discord.utils.get(guild.roles, name=role_name)
-        if role:
-            await ticket_creator.add_roles(role)
-        else:
-            missing_roles.append(role_name)
-
-    embed = discord.Embed(
-        title="🎉 Welcome to Obscurity! 🎉",
-        description=f"""Happy to have you with us, {ticket_creator.mention}!\n
-                    Head over to https://discord.com/channels/1517374163655065631/1517389459459538994 to familiarize yourself with our rules so you aren't accidentally breaking them!\n
-                    """,
-        color=discord.Color.blurple()
-    )
-
-    await interaction.response.send_message(embed=embed, view=WelcomeView())
-
 # -----------------------------
 # Role Button & Views
 # -----------------------------
