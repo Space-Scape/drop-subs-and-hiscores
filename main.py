@@ -1783,7 +1783,7 @@ async def on_ready():
             has_synced = True
         except Exception as e:
             print(f"❌ Command sync failed: {e}")
-
+    
     bot.add_view(TicketControlView())
     bot.add_view(RSNPanelView())
     bot.add_view(CollatButtons())
@@ -1795,7 +1795,6 @@ async def on_ready():
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
-        bot.add_view(WelcomeBaseRoleView(guild))
         if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
@@ -1805,7 +1804,8 @@ async def on_ready():
             bot.add_view(TimezoneView(guild))
         if bot.get_channel(VANITY_CHANNEL_ID):
             bot.add_view(VanityView(guild))
-
+        bot.add_view(LearnerTicketView())
+        bot.add_view(WelcomeBaseRoleView(guild))
     asyncio.create_task(rsn_writer())
         
 async def main():
