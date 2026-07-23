@@ -118,7 +118,7 @@ RANK_EMOJIS = {
 }
 
 RANK_HIERARCHY = [
-    "Member", "Serenist", "Dogsbody", "Recruit", "Pawn", "Corporal", 
+    "Member", "Recruit", "Pawn", "Corporal", 
     "Novice", "Sergeant", "Marshall", "TzKal", "Hellcat", "Coordinator", "Maxed"
 ]
 
@@ -758,6 +758,108 @@ class JoinModal(discord.ui.Modal, title="Join Obscurity"):
 # ---------------------------
 # 🔹 Welcome
 # ---------------------------
+
+class BaseRoleButton(discord.ui.Button):
+    def __init__(self, role_name: str, role_id: int, emoji=None):
+        super().__init__(
+            label=role_name, 
+            style=discord.ButtonStyle.secondary, 
+            emoji=emoji, 
+            custom_id=f"baserole_{role_id}"
+        )
+        self.role_name = role_name
+        self.role_id = role_id
+
+    async def callback(self, interaction: discord.Interaction):
+        role = interaction.guild.get_role(self.role_id)
+        if not role:
+            await interaction.response.send_message(f"❌ Role '{self.role_name}' not found in server.", ephemeral=True)
+            return
+
+        # Prevent users from having both base roles simultaneously
+        other_id = 1528545466227359785 if self.role_id == 1528789248415891516 else 1528789248415891516
+        other_role = interaction.guild.get_role(other_id)
+        
+        if other_role and other_role in interaction.user.roles:
+            await interaction.user.remove_roles(other_role)
+
+        if role in interaction.user.roles:
+            await interaction.user.remove_roles(role)
+            await interaction.response.send_message(f"{interaction.user.mention}, role **{self.role_name}** removed.", ephemeral=True)
+        else:
+            await interaction.user.add_roles(role)
+            await interaction.response.send_message(f"{interaction.user.mention}, role **{self.role_name}** added.", ephemeral=True)
+
+class WelcomeBaseRoleView(discord.ui.View):
+    def __init__(self, guild: discord.Guild):
+        super().__init__(timeout=None)
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+        
+        # Uses the exact Role IDs requested
+        self.add_item(BaseRoleButton("Serenist", 1528789248415891516, get_emoji("seren")))
+        self.add_item(BaseRoleButton("Dogsbody", 1528545466227359785, get_emoji("dogsbody")))
+
+@bot.tree.command(name="welcome", description="Welcome the ticket creator and give them default roles.")
+async def welcome(interaction: discord.Interaction):
+    if not isinstance(interaction.channel, discord.Thread):
+        await interaction.response.send_message("⚠️ This command must be used inside a ticket thread.", ephemeral=True)
+        return
+
+    ticket_creator = None
+    async for message in interaction.channel.history(limit=20, oldest_first=True):
+        if message.author.bot:
+            for mention in message.mentions:
+                if not mention.bot:
+                    ticket_creator = mention
+                    break
+            if ticket_creator:
+                break
+
+    if not ticket_creator:
+        await interaction.response.send_message("⚠️ Could not detect who opened this ticket.", ephemeral=True)
+        return
+
+    roles_to_assign = ["Member"] 
+    missing_roles = []
+    guild = interaction.guild
+
+    for role_name in roles_to_assign:
+        role = discord.utils.get(guild.roles, name=role_name)
+        if role:
+            await ticket_creator.add_roles(role)
+        else:
+            missing_roles.append(role_name)
+
+    embed = discord.Embed(
+        title="🎉 Welcome to Obscurity! 🎉",
+        description=f"""Happy to have you with us, {ticket_creator.mention}!\n
+                    Head over to https://discord.com/channels/1517374163655065631/1517389459459538994 to familiarize yourself with our rules so you aren't accidentally breaking them!\n
+                    """,
+        color=discord.Color.blurple()
+    )
+
+    await interaction.response.send_message(embed=embed, view=WelcomeView())
+
+    # 🔹 Wait 1 second, then post the base role prompt
+    await asyncio.sleep(1)
+    
+    role_embed = discord.Embed(
+        title="Choose Your Path",
+        description="Which base role would you like to start with?",
+        color=discord.Color.from_rgb(184, 249, 249)
+    )
+    role_embed.add_field(
+        name="<:seren:1519259305658814474> Serenist", 
+        value="New members who want to (learn) pvm.", 
+        inline=False
+    )
+    role_embed.add_field(
+        name="<:dogsbody:1528781938348003490> Dogsbody", 
+        value="New members who are here for vibes and community without focus on pvm.", 
+        inline=False
+    )
+    
+    await interaction.channel.send(embed=role_embed, view=WelcomeBaseRoleView(interaction.guild))
 
 class WelcomeView(View):
     def __init__(self):
@@ -1741,6 +1843,7 @@ async def on_ready():
     
     guild = bot.get_guild(GUILD_ID)
     if guild: 
+        bot.add_view(WelcomeBaseRoleView(guild))
         if bot.get_channel(ROLE_CHANNEL_ID): 
             bot.add_view(RaidsView(guild))
             bot.add_view(BossesView(guild))
