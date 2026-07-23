@@ -128,7 +128,7 @@ COLLAT_CHANNEL_ID = 1517385356452958338
 ADMINISTRATOR_ROLE_ID = 1517751423226613922
 INACTIVE_ROLE_ID = 1517388929655898233
 MEMBER_ROLE_ID = 1517809263739801683
-
+WELCOME_CHANNEL_ID = 1517389378412875937
 RSN_CHANNEL_ID = 1517389307722076332
 ROLE_CHANNEL_ID = 1517402556651802731
 
@@ -1652,22 +1652,26 @@ async def send_combined_panels(channel: discord.TextChannel):
     await channel.send("**𝕭𝖔𝖘𝖘𝖊𝖘**", view=BossesView(channel.guild))
     await channel.send("**𝕰𝖛𝖊𝖓𝖙𝖘**", view=EventsView(channel.guild))
     await channel.send("**𝕺𝖙𝖍𝖊𝖗 𝕽𝖔𝖑𝖊𝖘**", view=OtherRolesView(channel.guild))
+    await channel.send("# 𝕮𝖔𝖑𝖔𝖗𝖘")
+    await channel.send("**Select a Color Role:**\n*(Selecting a new color will automatically remove your old one)*", view=ColorPanelView())
 
 # ---------------------------
 # 🔹 Bot Events
 # ---------------------------
-
-@bot.tree.command(name="setup_panels", description="Posts the RSN and Role panels to their channels.")
+@bot.tree.command(name="setup_panels", description="Deploy all interactive panels to their respective channels.")
 @app_commands.checks.has_any_role("Administrators")
 async def setup_panels(interaction: discord.Interaction):
-    await interaction.response.send_message("Setting up panels...", ephemeral=True)
+    await interaction.response.send_message("Deploying all panels... this may take a moment.", ephemeral=True)
     
+    # 1. RSN Panel
     if rsn_channel := bot.get_channel(RSN_CHANNEL_ID): 
         await send_rsn_panel(rsn_channel)
         
+    # 2. Combined Boss Roles, Timezones & Colors Panel
     if combined_channel := bot.get_channel(ROLE_CHANNEL_ID): 
         await send_combined_panels(combined_channel)
 
+    # 3. Vanity Rank Panel
     if vanity_channel := bot.get_channel(VANITY_CHANNEL_ID):
         await vanity_channel.purge(limit=20)
         
@@ -1714,8 +1718,77 @@ async def setup_panels(interaction: discord.Interaction):
         
         final_embeds = rank_embeds[10:] + [header_embed]
         await vanity_channel.send(embeds=final_embeds, view=VanityView(interaction.guild))
+
+    # 4. Learner Panel
+    if learner_channel := bot.get_channel(LEARNER_CHANNEL_ID):
+        await learner_channel.purge(limit=10)
         
-    await interaction.followup.send("Panels have been deployed!", ephemeral=True)
+        learner_embed = discord.Embed(
+            title="📚 Learner & Mentor Requests", 
+            description="Looking to learn a raid? Click the corresponding button below to fill out a request form. A mentor will be pinged and will assist you in a private thread as soon as they are available.",
+            color=discord.Color.from_rgb(184, 249, 249)
+        )
+        learner_embed.add_field(
+            name="⚠️ Gear Requirements",
+            value="Before applying, please ensure your gear meets the minimum requirements found here:\nhttps://discord.com/channels/1517374163655065631/1519831937575944243",
+            inline=False
+        )
+        await learner_channel.send(embed=learner_embed, view=LearnerTicketView(interaction.guild))
+
+    # 5. Support Panel
+    if support_channel := bot.get_channel(TICKET_CHANNEL_ID):
+        await support_channel.purge(limit=10)
+        
+        support_embed = discord.Embed(
+            title="🆘 Support Center", 
+            description="Need assistance from the administration team? Open a private support ticket and we will help you as soon as we are available.",
+            color=discord.Color.from_rgb(43, 45, 49)
+        )
+        support_embed.add_field(
+            name="📌 What can we help with?",
+            value="• **Questions:** General inquiries about the clan or systems.\n• **Reports:** Reporting a player for breaking rules or toxic behavior.\n• **Coffer/Bank:** Issues or questions regarding clan wealth and payouts.\n• **Roles:** Requesting missing roles or name updates.",
+            inline=False
+        )
+        support_embed.add_field(
+            name="⏳ Response Time",
+            value="Admins are in various timezones. Please be patient after opening your ticket and provide as much detail as possible.",
+            inline=False
+        )
+        support_embed.set_footer(text="Obscurity Admin Team • Please don't misuse the ticket system and refrain from messaging admins directly.")
+        
+        await support_channel.send(embed=support_embed, view=SupportTicketView())
+
+    # 6. Welcome Panel
+    if welcome_channel := bot.get_channel(WELCOME_CHANNEL_ID):
+        await welcome_channel.purge(limit=10)
+        
+        welcome_embed = discord.Embed(
+            title="✨ Apply to Join Obscurity ✨", 
+            description="We are thrilled that you're interested in joining our community! To start your application process, please click the 'Join' button below.",
+            color=discord.Color.from_rgb(184, 249, 249)
+        )
+        welcome_embed.add_field(
+            name="👥 Our Community",
+            value="We uphold a welcoming and positive environment.\n\nThose that value these things might find this community to be the place they have been looking for, and we intend to keep it that way.\n\nWe hold our values and what we do to as high a standard as reasonably possible - we only ask that our members do the same.\n\nThat being said, please follow our rules. Knowingly breaking them will be cause for removal from the clan.",
+            inline=False
+        )
+        welcome_embed.add_field(
+            name="🎒 Requirements",
+            value="To join the clan you should be friendly and positive. The main items we'll ask for are basic PvM gear.\n\nYou can use the image below as a rough estimate - though you should have full tribrid gear of *some* kind.",
+            inline=False
+        )
+        welcome_embed.add_field(
+            name="⚠️ Before You Apply",
+            value="Please ensure you have read the server rules here: https://discord.com/channels/1517374163655065631/1517389459459538994.",
+            inline=False
+        )
+        welcome_embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+        welcome_embed.set_footer(text="Join Obscurity • Click the button below to begin")
+        
+        await welcome_channel.send(embed=welcome_embed, view=WelcomeTicketView())
+
+    await interaction.followup.send("✅ All panels have been successfully deployed!", ephemeral=True)
+
 @bot.tree.command(name="color_panel", description="Post the color role selection panel.")
 @app_commands.checks.has_any_role("Administrators")
 async def post_color_panel(interaction: discord.Interaction) -> None:
