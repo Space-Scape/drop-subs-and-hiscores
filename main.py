@@ -614,7 +614,7 @@ async def panel_welcome(interaction: discord.Interaction):
         inline=False
     )
     
-    embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
+    embed.set_image(url="")
     embed.set_footer(text="Join Obscurity • Click the button below to begin")
     
     await interaction.response.send_message("Posting Welcome panel...", ephemeral=True)
@@ -728,7 +728,6 @@ class JoinModal(discord.ui.Modal, title="Join Obscurity"):
                 description="Thanks for your interest in joining Obscurity. We're a learner-friendly and all-inclusive clan. Please send the requirements for the clan below so someone can assist you.",
                 color=discord.Color.blurple()
             )
-            requirements_embed.set_image(url="https://i.postimg.cc/rw0nvj1K/Sprite-0002.png")
             
             requirements_embed.add_field(
                 name="⏳ Response Time",
@@ -1198,33 +1197,25 @@ class InfernoModal(discord.ui.Modal, title="Learn the Inferno"):
         await interaction.response.send_message(f"✅ Your Inferno ticket has been opened: {thread.mention}", ephemeral=True)
 
 
+class LearnerTicketButton(discord.ui.Button):
+    def __init__(self, label: str, style: discord.ButtonStyle, custom_id: str, modal_class, emoji=None):
+        super().__init__(label=label, style=style, custom_id=custom_id, emoji=emoji)
+        self.modal_class = modal_class
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_modal(self.modal_class())
+
 class LearnerTicketView(View):
-    def __init__(self):
+    def __init__(self, guild: discord.Guild):
         super().__init__(timeout=None)
-    
-    @discord.ui.button(label="Learn ToB", style=discord.ButtonStyle.danger, custom_id="learner_tob_btn", emoji="🩸")
-    async def open_tob_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(ToBModal())
-
-    @discord.ui.button(label="Learn CoX", style=discord.ButtonStyle.success, custom_id="learner_cox_btn", emoji="🐉")
-    async def open_cox_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(CoXModal())
-
-    @discord.ui.button(label="Learn ToA", style=discord.ButtonStyle.primary, custom_id="learner_toa_btn", emoji="🏜️")
-    async def open_toa_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(ToAModal())
-
-    @discord.ui.button(label="Learn General Boss", style=discord.ButtonStyle.secondary, custom_id="learner_general_btn", emoji="⚔️")
-    async def open_general_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(GeneralModal())
-
-    @discord.ui.button(label="Learn Colosseum", style=discord.ButtonStyle.secondary, custom_id="learner_colo_btn", emoji="🏟️")
-    async def open_colo_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(ColosseumModal())
-
-    @discord.ui.button(label="Learn Inferno", style=discord.ButtonStyle.secondary, custom_id="learner_inferno_btn", emoji="🔥")
-    async def open_inferno_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_modal(InfernoModal())
+        get_emoji = lambda name: discord.utils.get(guild.emojis, name=name)
+        
+        self.add_item(LearnerTicketButton("Learn ToB", discord.ButtonStyle.danger, "learner_tob_btn", ToBModal, get_emoji("tob")))
+        self.add_item(LearnerTicketButton("Learn CoX", discord.ButtonStyle.success, "learner_cox_btn", CoXModal, get_emoji("cox")))
+        self.add_item(LearnerTicketButton("Learn ToA", discord.ButtonStyle.primary, "learner_toa_btn", ToAModal, get_emoji("toa")))
+        self.add_item(LearnerTicketButton("Learn General Boss", discord.ButtonStyle.secondary, "learner_general_btn", GeneralModal, get_emoji("raider")))
+        self.add_item(LearnerTicketButton("Learn Colosseum", discord.ButtonStyle.secondary, "learner_colo_btn", ColosseumModal, get_emoji("colosseum")))
+        self.add_item(LearnerTicketButton("Learn Inferno", discord.ButtonStyle.secondary, "learner_inferno_btn", InfernoModal, get_emoji("inferno")))
 
 @bot.tree.command(name="panel_learner", description="Post the Mentor/Learner ticket panel.")
 @app_commands.checks.has_any_role("Administrators")
@@ -1237,12 +1228,13 @@ async def panel_learner(interaction: discord.Interaction):
 
     embed.add_field(
         name="⚠️ Gear Requirements",
-        value="Before applying, please ensure your gear meets the minimum requirements found here:\nhttps://discord.com/channels/1517374163655065631/1519831937575944243",
+        value="Before applying, please ensure your gear meets the minimum requirements for mentoring (see here: https://discord.com/channels/1517374163655065631/1529761437021376512)",
         inline=False
     )
     
     await interaction.response.send_message("Posting Learner panel...", ephemeral=True)
-    await interaction.channel.send(embed=embed, view=LearnerTicketView())
+    # Passed interaction.guild into the View here
+    await interaction.channel.send(embed=embed, view=LearnerTicketView(interaction.guild))
 
 # ---------------------------
 # 🔹 RSN Commands
