@@ -56,9 +56,17 @@ class Obscurity(commands.Cog):
         if before.author.bot or before.content == after.content or not before.guild:
             return
 
+        old_content = before.content if before.content else "*no content*"
+        if len(old_content) > 1024:
+            old_content = old_content[:1020] + "..."
+
+        new_content = after.content if after.content else "*no content*"
+        if len(new_content) > 1024:
+            new_content = new_content[:1020] + "..."
+
         embed = discord.Embed(title=":pencil: Message Updated", color=discord.Color.gold(), timestamp=datetime.utcnow())
-        embed.add_field(name="Old Message", value=before.content or "*no content*", inline=False)
-        embed.add_field(name="New Message", value=after.content or "*no content*", inline=False)
+        embed.add_field(name="Old Message", value=old_content, inline=False)
+        embed.add_field(name="New Message", value=new_content, inline=False)
         embed.add_field(name="Channel", value=before.channel.mention, inline=True)
         embed.add_field(name="Author", value=f"{before.author.display_name} ({before.author}) | {before.author.id}", inline=True)
         await send_log(before.guild, embed, MESSAGE_LOG_CHANNEL_ID)
@@ -67,8 +75,12 @@ class Obscurity(commands.Cog):
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
+        del_content = message.content if message.content else "*no content*"
+        if len(del_content) > 1024:
+            del_content = del_content[:1020] + "..."
+
         embed = discord.Embed(title=":wastebasket: Message Deleted", color=discord.Color.dark_red(), timestamp=datetime.utcnow())
-        embed.add_field(name="Deleted Message", value=message.content or "*no content*", inline=False)
+        embed.add_field(name="Deleted Message", value=del_content, inline=False)
         embed.add_field(name="Channel", value=message.channel.mention, inline=True)
         embed.add_field(name="Author", value=f"{message.author.display_name} ({message.author}) | {message.author.id}", inline=True)
         await send_log(message.guild, embed, MESSAGE_LOG_CHANNEL_ID)
